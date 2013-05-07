@@ -18,6 +18,7 @@ Provides:
 Obsoletes:
     - nemo-qml-plugins-notifications <= 0.3.20
 Files:
+    - "%{_libdir}/libnemonotifications.so.*"
     - "%{_libdir}/qt4/imports/org/nemomobile/notifications/libnemonotifications.so"
     - "%{_libdir}/qt4/imports/org/nemomobile/notifications/qmldir"
 SubPackages:
@@ -26,5 +27,7 @@ SubPackages:
       Group: System/Libraries
       Description: "%{summary}."
       Files:
-          - "%{_includedir}/nemo-qml-plugins/notifications/*.h"
+          - "%{_libdir}/libnemonotifications.so"
+          - "%{_libdir}/libnemonotifications.prl"
+          - "%{_includedir}/nemonotifications/*.h"
           - "%{_libdir}/pkgconfig/nemonotifications.pc"
