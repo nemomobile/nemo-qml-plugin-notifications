@@ -1,6 +1,7 @@
 system(qdbusxml2cpp org.freedesktop.Notifications.xml -p notificationmanagerproxy -c NotificationManagerProxy -i notification.h)
 
 TEMPLATE = lib
+VERSION = 0.0.3
 equals(QT_MAJOR_VERSION, 4): TARGET = nemonotifications
 equals(QT_MAJOR_VERSION, 5): TARGET = nemonotifications-qt5
 CONFIG += qt hide_symbols create_pc create_prl
