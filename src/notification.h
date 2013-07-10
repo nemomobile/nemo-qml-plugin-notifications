@@ -97,6 +97,9 @@ public:
     QVariantList remoteDBusCallArguments() const;
     void setRemoteDBusCallArguments(const QVariantList &arguments);
 
+    QVariant hintValue(const QString &hint) const;
+    void setHintValue(const QString &hint, const QVariant &value);
+
     Q_INVOKABLE void publish();
     Q_INVOKABLE void close();
     Q_INVOKABLE static QList<QObject*> notifications();

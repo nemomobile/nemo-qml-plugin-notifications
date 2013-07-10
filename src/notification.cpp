@@ -412,6 +412,16 @@ void Notification::setRemoteActionHint()
     hints_.insert(HINT_REMOTE_ACTION, s);
 }
 
+QVariant Notification::hintValue(const QString &hint) const
+{
+    return hints_.value(hint).toString();
+}
+
+void Notification::setHintValue(const QString &hint, const QVariant &value)
+{
+    hints_.insert(hint, value);
+}
+
 /*!
     \qmlmethod void Notification::notifications()
 
