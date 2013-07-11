@@ -414,7 +414,7 @@ void Notification::setRemoteActionHint()
 
 QVariant Notification::hintValue(const QString &hint) const
 {
-    return hints_.value(hint).toString();
+    return hints_.value(hint);
 }
 
 void Notification::setHintValue(const QString &hint, const QVariant &value)
