@@ -38,12 +38,28 @@
 #include <QVariantHash>
 #include <QDBusArgument>
 
+struct NotificationPrivate
+{
+    NotificationPrivate();
+    uint replacesId;
+    QString summary;
+    QString body;
+    QVariantHash hints;
+    QString remoteDBusCallServiceName;
+    QString remoteDBusCallObjectPath;
+    QString remoteDBusCallInterface;
+    QString remoteDBusCallMethodName;
+    QVariantList remoteDBusCallArguments;
+};
+
+class NotificationManagerProxy;
 class Q_DECL_EXPORT Notification : public QObject
 {
     Q_OBJECT
 
 public:
-    Notification(QObject *parent = 0);
+    explicit Notification(QObject *parent = 0);
+    virtual ~Notification();
 
     Q_PROPERTY(QString category READ category WRITE setCategory NOTIFY categoryChanged)
     QString category() const;
@@ -120,6 +136,8 @@ signals:
     void previewBodyChanged();
     void itemCountChanged();
     void remoteDBusCallChanged();
+protected:
+    QScopedPointer<NotificationPrivate> d_ptr;
 
 private slots:
     void checkActionInvoked(uint id, QString actionKey);
@@ -127,21 +145,11 @@ private slots:
     void setRemoteActionHint();
 
 private:
-    static QString appName();
-
-    uint replacesId_;
-    QString summary_;
-    QString body_;
-    QVariantHash hints_;
-    QString remoteDBusCallServiceName_;
-    QString remoteDBusCallObjectPath_;
-    QString remoteDBusCallInterface_;
-    QString remoteDBusCallMethodName_;
-    QVariantList remoteDBusCallArguments_;
+    Q_DECLARE_PRIVATE(Notification)
+    static Notification * createNotification(const NotificationPrivate &data, QObject *parent = 0);
 };
 
-Q_DECLARE_METATYPE(Notification)
-Q_DECLARE_METATYPE(QList<Notification>)
-Q_DECLARE_METATYPE(QList<Notification*>)
+Q_DECLARE_METATYPE(NotificationPrivate)
+Q_DECLARE_METATYPE(QList<NotificationPrivate>)
 
 #endif // NOTIFICATION_H
