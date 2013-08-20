@@ -1,5 +1,7 @@
 TEMPLATE = subdirs
-CONFIG += ordered
-SUBDIRS = src src/plugin
 
-src/plugin.depends = src
+src_plugins.subdir = src/plugin
+src_plugins.target = sub-plugins
+src_plugins.depends = src
+
+SUBDIRS += src src_plugins
