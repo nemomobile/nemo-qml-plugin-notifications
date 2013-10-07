@@ -53,13 +53,13 @@ NotificationManagerProxy *notificationManager()
 }
 
 /*!
-    \qmlclass Notification
+    \qmltype Notification
     \brief Allows notifications to be published
 
     The Notification class is a convenience class for using notifications
     based on the
-    <a href="http://www.galago-project.org/specs/notification/0.9/">Desktop
-    Notifications Specification</a> as implemented in Nemo.
+    \l {http://www.galago-project.org/specs/notification/0.9/} {Desktop
+    Notifications Specification} as implemented in Nemo.
 
     Since the Nemo implementation allows static notification parameters,
     such as icon, urgency, priority and user closability definitions, to
@@ -124,7 +124,7 @@ Notification::Notification(QObject *parent) :
 }
 
 /*!
-    \qmlproperty QString category
+    \qmlproperty QString Notification::category
 
     The type of notification this is. Defaults to an empty string.
  */
@@ -142,7 +142,7 @@ void Notification::setCategory(const QString &category)
 }
 
 /*!
-    \qmlproperty uint replacesId
+    \qmlproperty uint Notification::replacesId
 
     The optional notification ID that this notification replaces. The server must atomically (ie with no flicker or other visual cues) replace the given notification with this one. This allows clients to effectively modify the notification while it's active. A value of value of 0 means that this notification won't replace any existing notifications. Defaults to 0.
  */
@@ -160,7 +160,7 @@ void Notification::setReplacesId(uint id)
 }
 
 /*!
-    \qmlproperty QString summary
+    \qmlproperty QString Notification::summary
 
     The summary text briefly describing the notification. Defaults to an empty string.
  */
@@ -178,7 +178,7 @@ void Notification::setSummary(const QString &summary)
 }
 
 /*!
-    \qmlproperty QString body
+    \qmlproperty QString Notification::body
 
     The optional detailed body text. Can be empty. Defaults to an empty string.
  */
@@ -196,7 +196,7 @@ void Notification::setBody(const QString &body)
 }
 
 /*!
-    \qmlproperty QDateTime timestamp
+    \qmlproperty QDateTime Notification::timestamp
 
     The timestamp for the notification. Should be set to the time when the event the notification is related to has occurred. Defaults to current time.
  */
@@ -214,7 +214,7 @@ void Notification::setTimestamp(const QDateTime &timestamp)
 }
 
 /*!
-    \qmlproperty QString previewSummary
+    \qmlproperty QString Notification::previewSummary
 
     Summary text to be shown in the preview banner for the notification, if any. Defaults to an empty string.
  */
@@ -232,7 +232,7 @@ void Notification::setPreviewSummary(const QString &previewSummary)
 }
 
 /*!
-    \qmlproperty QString previewBody
+    \qmlproperty QString Notification::previewBody
 
     Body text to be shown in the preview banner for the notification, if any. Defaults to an empty string.
  */
@@ -250,7 +250,7 @@ void Notification::setPreviewBody(const QString &previewBody)
 }
 
 /*!
-    \qmlproperty int itemCount
+    \qmlproperty int Notification::itemCount
 
     The number of items represented by the notification. For example, a single notification can represent four missed calls by setting the count to 4. Defaults to 1.
  */
@@ -320,6 +320,11 @@ void Notification::checkNotificationClosed(uint id, uint reason)
     }
 }
 
+/*!
+    \qmlproperty QString Notification::remoteDBusCallServiceName
+
+    The service name of the D-Bus call for this notification. Defaults to an empty string.
+ */
 QString Notification::remoteDBusCallServiceName() const
 {
     return remoteDBusCallServiceName_;
@@ -333,6 +338,11 @@ void Notification::setRemoteDBusCallServiceName(const QString &serviceName)
     }
 }
 
+/*!
+    \qmlproperty QString Notification::remoteDBusCallObjectPath
+
+    The object path of the D-Bus call for this notification. Defaults to an empty string.
+ */
 QString Notification::remoteDBusCallObjectPath() const
 {
     return remoteDBusCallObjectPath_;
@@ -346,6 +356,11 @@ void Notification::setRemoteDBusCallObjectPath(const QString &objectPath)
     }
 }
 
+/*!
+    \qmlproperty QString Notification::remoteDBusCallInterface
+
+    The interface of the D-Bus call for this notification. Defaults to an empty string.
+ */
 QString Notification::remoteDBusCallInterface() const
 {
     return remoteDBusCallInterface_;
@@ -359,6 +374,11 @@ void Notification::setRemoteDBusCallInterface(const QString &interface)
     }
 }
 
+/*!
+    \qmlproperty QString Notification::remoteDBusCallMethodName
+
+    The method name of the D-Bus call for this notification. Defaults to an empty string.
+ */
 QString Notification::remoteDBusCallMethodName() const
 {
     return remoteDBusCallMethodName_;
@@ -372,6 +392,11 @@ void Notification::setRemoteDBusCallMethodName(const QString &methodName)
     }
 }
 
+/*!
+    \qmlproperty QString Notification::remoteDBusCallArguments
+
+    The arguments of the D-Bus call for this notification. Defaults to an empty variant list.
+ */
 QVariantList Notification::remoteDBusCallArguments() const
 {
     return remoteDBusCallArguments_;
@@ -412,11 +437,21 @@ void Notification::setRemoteActionHint()
     hints_.insert(HINT_REMOTE_ACTION, s);
 }
 
+/*!
+    \fn QVariant Notification::hintValue(const QString &hint) const
+
+    Returns the value of the given \a hint .
+*/
 QVariant Notification::hintValue(const QString &hint) const
 {
     return hints_.value(hint);
 }
 
+/*!
+    \fn void Notification::setHintValue(const QString &hint, const QVariant &value)
+
+    Sets the value of the given \a hint to a given \a value .
+*/
 void Notification::setHintValue(const QString &hint, const QVariant &value)
 {
     hints_.insert(hint, value);

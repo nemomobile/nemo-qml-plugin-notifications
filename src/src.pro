@@ -15,8 +15,6 @@ HEADERS += \
     notification.h \
     notificationmanagerproxy.h
 
-OTHER_FILES += notifications.qdoc notifications.qdocconf
-
 target.path = $$[QT_INSTALL_LIBS]
 pkgconfig.files = $$TARGET.pc
 pkgconfig.path = $$target.path/pkgconfig

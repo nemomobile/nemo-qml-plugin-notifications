@@ -28,3 +28,9 @@ SubPackages:
           - "%{_libdir}/libnemonotifications-qt5.prl"
           - "%{_includedir}/nemonotifications-qt5/*.h"
           - "%{_libdir}/pkgconfig/nemonotifications-qt5.pc"
+    - Name: doc
+      Summary: Documentation for %{name}
+      Group: Documentation
+      Description: "%{summary}."
+      Files:
+          - "%{_docdir}/%{name}"

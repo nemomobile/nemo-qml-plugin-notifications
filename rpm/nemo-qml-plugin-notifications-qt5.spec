@@ -33,6 +33,17 @@ Requires:   %{name} = %{version}-%{release}
 %description devel
 %{summary}.
 
+%package doc
+Summary: Documentation for %{name}
+Group: Documentation
+BuildRequires: qt5-qttools-qthelp-devel
+BuildRequires: qt5-tools
+BuildRequires: qt5-plugin-platform-minimal
+BuildRequires: qt5-plugin-sqldriver-sqlite
+
+%description doc
+%{summary}.
+
 %prep
 %setup -q -n %{name}-%{version}
 
@@ -46,6 +57,7 @@ Requires:   %{name} = %{version}-%{release}
 %qmake5 
 
 make %{?jobs:-j%jobs}
+make docs
 
 # >> build post
 # << build post
@@ -55,6 +67,8 @@ rm -rf %{buildroot}
 # >> install pre
 # << install pre
 %qmake_install
+mkdir -p %{buildroot}/%{_docdir}/%{name}
+cp -R doc/html/* %{buildroot}/%{_docdir}/%{name}/
 
 # >> install post
 # << install post
@@ -79,3 +93,7 @@ rm -rf %{buildroot}
 %{_libdir}/pkgconfig/nemonotifications-qt5.pc
 # >> files devel
 # << files devel
+
+%files doc
+%defattr(-,root,root,-)
+%{_docdir}/%{name}
