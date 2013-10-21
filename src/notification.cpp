@@ -40,16 +40,16 @@ const char *HINT_PREVIEW_SUMMARY = "x-nemo-preview-summary";
 const char *HINT_REMOTE_ACTION = "x-nemo-remote-action-default";
 
 //! A proxy for accessing the notification manager
-static QScopedPointer<NotificationManagerProxy> notificationManagerProxy;
+Q_GLOBAL_STATIC_WITH_ARGS(NotificationManagerProxy, notificationManagerProxyInstance, ("org.freedesktop.Notifications", "/org/freedesktop/Notifications", QDBusConnection::sessionBus()))
 
 NotificationManagerProxy *notificationManager()
 {
-    if (notificationManagerProxy.isNull()) {
+    if (!notificationManagerProxyInstance.exists()) {
         qDBusRegisterMetaType<Notification>();
         qDBusRegisterMetaType<QList<Notification> >();
-        notificationManagerProxy.reset(new NotificationManagerProxy("org.freedesktop.Notifications", "/org/freedesktop/Notifications", QDBusConnection::sessionBus()));
     }
-    return notificationManagerProxy.data();
+
+    return notificationManagerProxyInstance();
 }
 
 /*!

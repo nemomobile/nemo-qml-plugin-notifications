@@ -2,8 +2,7 @@ system(qdbusxml2cpp org.freedesktop.Notifications.xml -p notificationmanagerprox
 
 TEMPLATE = lib
 VERSION = 0.0.4
-equals(QT_MAJOR_VERSION, 4): TARGET = nemonotifications
-equals(QT_MAJOR_VERSION, 5): TARGET = nemonotifications-qt5
+TARGET = nemonotifications-qt5
 CONFIG += qt hide_symbols create_pc create_prl
 QT += dbus
 QT -= gui
@@ -19,8 +18,7 @@ target.path = $$[QT_INSTALL_LIBS]
 pkgconfig.files = $$TARGET.pc
 pkgconfig.path = $$target.path/pkgconfig
 headers.files = notification.h
-equals(QT_MAJOR_VERSION, 4): headers.path = /usr/include/nemonotifications
-equals(QT_MAJOR_VERSION, 5): headers.path = /usr/include/nemonotifications-qt5
+headers.path = /usr/include/nemonotifications-qt5
 
 QMAKE_PKGCONFIG_NAME = lib$$TARGET
 QMAKE_PKGCONFIG_DESCRIPTION = Convenience library or sending notifications
