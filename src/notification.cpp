@@ -393,7 +393,7 @@ void Notification::setRemoteDBusCallMethodName(const QString &methodName)
 }
 
 /*!
-    \qmlproperty QString Notification::remoteDBusCallArguments
+    \qmlproperty QVariantList Notification::remoteDBusCallArguments
 
     The arguments of the D-Bus call for this notification. Defaults to an empty variant list.
  */
