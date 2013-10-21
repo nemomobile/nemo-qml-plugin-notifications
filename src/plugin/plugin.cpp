@@ -31,20 +31,12 @@
  */
 
 #include <QtGlobal>
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-# include <QtQml>
-# include <QQmlEngine>
-# include <QQmlExtensionPlugin>
-# define QDeclarativeEngine QQmlEngine
-# define QDeclarativeExtensionPlugin QQmlExtensionPlugin
-#else
-# include <QtDeclarative>
-# include <QDeclarativeEngine>
-# include <QDeclarativeExtensionPlugin>
-#endif
+#include <QtQml>
+#include <QQmlEngine>
+#include <QQmlExtensionPlugin>
 #include "notification.h"
 
-class Q_DECL_EXPORT NemoNotificationsPlugin : public QDeclarativeExtensionPlugin
+class Q_DECL_EXPORT NemoNotificationsPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
@@ -59,10 +51,6 @@ public:
     {
     }
 
-    void initializeEngine(QDeclarativeEngine *, const char *)
-    {
-    }
-
     void registerTypes(const char *uri)
     {
         Q_ASSERT(uri == QLatin1String("org.nemomobile.notifications"));
@@ -70,9 +58,5 @@ public:
         qmlRegisterType<Notification>(uri, 1, 0, "Notification");
     }
 };
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-Q_EXPORT_PLUGIN2(NemoNotifications, NemoNotificationsPlugin)
-#endif
 
 #include "plugin.moc"
