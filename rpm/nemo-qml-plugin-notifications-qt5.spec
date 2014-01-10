@@ -57,7 +57,9 @@ BuildRequires: qt5-plugin-sqldriver-sqlite
 %qmake5 
 
 make %{?jobs:-j%jobs}
+%ifnarch x86_64
 make docs
+%endif
 
 # >> build post
 # << build post
@@ -67,8 +69,10 @@ rm -rf %{buildroot}
 # >> install pre
 # << install pre
 %qmake_install
+%ifnarch x86_64
 mkdir -p %{buildroot}/%{_docdir}/%{name}
 cp -R doc/html/* %{buildroot}/%{_docdir}/%{name}/
+%endif
 
 # >> install post
 # << install post
@@ -96,4 +100,6 @@ cp -R doc/html/* %{buildroot}/%{_docdir}/%{name}/
 
 %files doc
 %defattr(-,root,root,-)
+%ifnarch x86_64
 %{_docdir}/%{name}
+%endif
