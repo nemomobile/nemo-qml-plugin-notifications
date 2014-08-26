@@ -38,12 +38,31 @@
 #include <QVariantHash>
 #include <QDBusArgument>
 
+struct NotificationData
+{
+    NotificationData();
+
+    uint replacesId;
+    QString summary;
+    QString body;
+    QHash<QString, QString> actions;
+    QVariantHash hints;
+    QVariantList remoteActions;
+    QString remoteDBusCallServiceName;
+    QString remoteDBusCallObjectPath;
+    QString remoteDBusCallInterface;
+    QString remoteDBusCallMethodName;
+    QVariantList remoteDBusCallArguments;
+};
+
+class NotificationManagerProxy;
 class Q_DECL_EXPORT Notification : public QObject
 {
     Q_OBJECT
 
 public:
-    Notification(QObject *parent = 0);
+    explicit Notification(QObject *parent = 0);
+    virtual ~Notification();
 
     Q_PROPERTY(QString category READ category WRITE setCategory NOTIFY categoryChanged)
     QString category() const;
@@ -111,8 +130,6 @@ public:
     Q_INVOKABLE static QList<QObject*> notifications();
 
     explicit Notification(const Notification &notification);
-    friend QDBusArgument &operator<<(QDBusArgument &, const Notification &);
-    friend const QDBusArgument &operator>>(const QDBusArgument &, Notification &);
 
 signals:
     void clicked();
@@ -128,29 +145,22 @@ signals:
     void remoteActionsChanged();
     void remoteDBusCallChanged();
 
+protected:
+    QScopedPointer<NotificationData> data;
+
 private slots:
     void checkActionInvoked(uint id, QString actionKey);
     void checkNotificationClosed(uint id, uint reason);
     void setRemoteActionHint();
 
 private:
-    static QString appName();
-
-    uint replacesId_;
-    QString summary_;
-    QString body_;
-    QHash<QString, QString> actions_;
-    QVariantHash hints_;
-    QVariantList remoteActions_;
-    QString remoteDBusCallServiceName_;
-    QString remoteDBusCallObjectPath_;
-    QString remoteDBusCallInterface_;
-    QString remoteDBusCallMethodName_;
-    QVariantList remoteDBusCallArguments_;
+    static Notification *createNotification(const NotificationData &data, QObject *parent = 0);
 };
 
-Q_DECLARE_METATYPE(Notification)
-Q_DECLARE_METATYPE(QList<Notification>)
-Q_DECLARE_METATYPE(QList<Notification*>)
+QDBusArgument &operator<<(QDBusArgument &, const NotificationData &);
+const QDBusArgument &operator>>(const QDBusArgument &, NotificationData &);
+
+Q_DECLARE_METATYPE(NotificationData)
+Q_DECLARE_METATYPE(QList<NotificationData>)
 
 #endif // NOTIFICATION_H
