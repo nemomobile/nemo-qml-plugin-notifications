@@ -97,6 +97,12 @@ public:
     QVariantList remoteDBusCallArguments() const;
     void setRemoteDBusCallArguments(const QVariantList &arguments);
 
+    // Obsoletes the set of remoteDBusCall... properties
+    Q_PROPERTY(QVariantList remoteActions READ remoteActions WRITE setRemoteActions NOTIFY remoteActionsChanged)
+    QVariantList remoteActions() const;
+    void setRemoteActions(const QVariantList &remoteActions);
+    inline void setRemoteAction(const QVariant &remoteAction) { setRemoteActions(QVariantList() << remoteAction); }
+
     QVariant hintValue(const QString &hint) const;
     void setHintValue(const QString &hint, const QVariant &value);
 
@@ -119,6 +125,7 @@ signals:
     void previewSummaryChanged();
     void previewBodyChanged();
     void itemCountChanged();
+    void remoteActionsChanged();
     void remoteDBusCallChanged();
 
 private slots:
@@ -132,7 +139,9 @@ private:
     uint replacesId_;
     QString summary_;
     QString body_;
+    QHash<QString, QString> actions_;
     QVariantHash hints_;
+    QVariantList remoteActions_;
     QString remoteDBusCallServiceName_;
     QString remoteDBusCallObjectPath_;
     QString remoteDBusCallInterface_;
