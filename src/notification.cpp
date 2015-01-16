@@ -42,6 +42,7 @@ const char *HINT_TIMESTAMP = "x-nemo-timestamp";
 const char *HINT_PREVIEW_BODY = "x-nemo-preview-body";
 const char *HINT_PREVIEW_SUMMARY = "x-nemo-preview-summary";
 const char *HINT_REMOTE_ACTION_PREFIX = "x-nemo-remote-action-";
+const char *HINT_REMOTE_ACTION_ICON_PREFIX = "x-nemo-remote-action-icon-";
 const char *DEFAULT_ACTION_NAME = "default";
 
 //! A proxy for accessing the notification manager
@@ -129,12 +130,16 @@ QPair<QHash<QString, QString>, QVariantHash> encodeActionHints(const QVariantLis
             const QString iface = vm["iface"].value<QString>();
             const QString method = vm["method"].value<QString>();
             const QVariantList arguments = vm["arguments"].value<QVariantList>();
+            const QString icon = vm["icon"].value<QString>();
 
             if (service.isEmpty() || path.isEmpty() || iface.isEmpty() || method.isEmpty()) {
                 qWarning() << "Unable to encode invalid remote action:" << action;
             } else {
                 rv.first.insert(actionName, displayName);
                 rv.second.insert(QString(HINT_REMOTE_ACTION_PREFIX) + actionName, encodeDBusCall(service, path, iface, method, arguments));
+                if (!icon.isEmpty()) {
+                    rv.second.insert(QString(HINT_REMOTE_ACTION_ICON_PREFIX) + actionName, icon);
+                }
             }
         }
     }
@@ -182,6 +187,12 @@ QVariantList decodeActionHints(const QHash<QString, QString> &actions, const QVa
                 action.insert(QStringLiteral("name"), actionName);
                 action.insert(QStringLiteral("displayName"), displayName);
 
+                const QString iconHintName = QString(HINT_REMOTE_ACTION_ICON_PREFIX) + actionName;
+                const QString &iconHint = hints[iconHintName].toString();
+                if (!iconHint.isEmpty()) {
+                    action.insert(QStringLiteral("icon"), iconHint);
+                }
+
                 rv.append(action);
             }
         }
@@ -226,6 +237,7 @@ QVariantList decodeActionHints(const QHash<QString, QString> &actions, const QVa
             remoteActions: [ {
                 "name": "default",
                 "displayName": "Do something",
+                "icon": "icon-s-do-it",
                 "service": "org.nemomobile.example",
                 "path": "/example",
                 "iface": "org.nemomobile.example",
@@ -234,6 +246,7 @@ QVariantList decodeActionHints(const QHash<QString, QString> &actions, const QVa
             },{
                 "name": "ignore",
                 "displayName": "Ignore the problem",
+                "icon": "icon-s-ignore",
                 "service": "org.nemomobile.example",
                 "path": "/example",
                 "iface": "org.nemomobile.example",
