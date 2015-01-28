@@ -32,12 +32,18 @@
 #include "notificationmanagerproxy.h"
 #include "notification.h"
 
+#include <QStringBuilder>
+
+namespace {
+
 const char *HINT_CATEGORY = "category";
 const char *HINT_ITEM_COUNT = "x-nemo-item-count";
 const char *HINT_TIMESTAMP = "x-nemo-timestamp";
 const char *HINT_PREVIEW_BODY = "x-nemo-preview-body";
 const char *HINT_PREVIEW_SUMMARY = "x-nemo-preview-summary";
-const char *HINT_REMOTE_ACTION = "x-nemo-remote-action-default";
+const char *HINT_REMOTE_ACTION_PREFIX = "x-nemo-remote-action-";
+const char *HINT_REMOTE_ACTION_ICON_PREFIX = "x-nemo-remote-action-icon-";
+const char *DEFAULT_ACTION_NAME = "default";
 
 //! A proxy for accessing the notification manager
 Q_GLOBAL_STATIC_WITH_ARGS(NotificationManagerProxy, notificationManagerProxyInstance, ("org.freedesktop.Notifications", "/org/freedesktop/Notifications", QDBusConnection::sessionBus()))
@@ -50,6 +56,151 @@ NotificationManagerProxy *notificationManager()
     }
 
     return notificationManagerProxyInstance();
+}
+
+QString encodeDBusCall(const QString &service, const QString &path, const QString &iface, const QString &method, const QVariantList &arguments)
+{
+    const QString space(QStringLiteral(" "));
+
+    QString s = service % space % path % space % iface % space % method;
+
+    if (!arguments.isEmpty()) {
+        QStringList args;
+        int argsLength = 0;
+
+        foreach (const QVariant &arg, arguments) {
+            // Serialize the QVariant into a Base64 encoded byte stream
+            QByteArray buffer;
+            QDataStream stream(&buffer, QIODevice::WriteOnly);
+            stream << arg;
+            args.append(space + buffer.toBase64());
+            argsLength += args.last().length();
+        }
+
+        s.reserve(s.length() + argsLength);
+        foreach (const QString &arg, args) {
+            s.append(arg);
+        }
+    }
+
+    return s;
+}
+
+QStringList encodeActions(const QHash<QString, QString> &actions)
+{
+    QStringList rv;
+
+    // Actions are encoded as a sequence of name followed by displayName
+    QHash<QString, QString>::const_iterator it = actions.constBegin(), end = actions.constEnd();
+    for ( ; it != end; ++it) {
+        rv.append(it.key());
+        rv.append(it.value());
+    }
+
+    return rv;
+}
+
+QHash<QString, QString> decodeActions(const QStringList &actions)
+{
+    QHash<QString, QString> rv;
+
+    QStringList::const_iterator it = actions.constBegin(), end = actions.constEnd();
+    for ( ; it != end; ++it) {
+        // If we have an odd number of tokens, add an empty displayName to complete the last pair
+        const QString &name(*it);
+        ++it;
+        const QString &displayName(it != end ? *it : QString());
+        rv.insert(name, displayName);
+    }
+
+    return rv;
+}
+
+QPair<QHash<QString, QString>, QVariantHash> encodeActionHints(const QVariantList &actions)
+{
+    QPair<QHash<QString, QString>, QVariantHash> rv;
+
+    foreach (const QVariant &action, actions) {
+        QVariantMap vm = action.value<QVariantMap>();
+        const QString actionName = vm["name"].value<QString>();
+        if (!actionName.isEmpty()) {
+            const QString displayName = vm["displayName"].value<QString>();
+            const QString service = vm["service"].value<QString>();
+            const QString path = vm["path"].value<QString>();
+            const QString iface = vm["iface"].value<QString>();
+            const QString method = vm["method"].value<QString>();
+            const QVariantList arguments = vm["arguments"].value<QVariantList>();
+            const QString icon = vm["icon"].value<QString>();
+
+            if (service.isEmpty() || path.isEmpty() || iface.isEmpty() || method.isEmpty()) {
+                qWarning() << "Unable to encode invalid remote action:" << action;
+            } else {
+                rv.first.insert(actionName, displayName);
+                rv.second.insert(QString(HINT_REMOTE_ACTION_PREFIX) + actionName, encodeDBusCall(service, path, iface, method, arguments));
+                if (!icon.isEmpty()) {
+                    rv.second.insert(QString(HINT_REMOTE_ACTION_ICON_PREFIX) + actionName, icon);
+                }
+            }
+        }
+    }
+
+    return rv;
+}
+
+QVariantList decodeActionHints(const QHash<QString, QString> &actions, const QVariantHash &hints)
+{
+    QVariantList rv;
+
+    QHash<QString, QString>::const_iterator ait = actions.constBegin(), aend = actions.constEnd();
+    for ( ; ait != aend; ++ait) {
+        const QString &actionName = ait.key();
+        const QString &displayName = ait.value();
+
+        const QString hintName = QString(HINT_REMOTE_ACTION_PREFIX) + actionName;
+        const QString &hint = hints[hintName].toString();
+        if (!hint.isEmpty()) {
+            QVariantMap action;
+
+            // Extract the element of the DBus call
+            QStringList elements(hint.split(' ', QString::SkipEmptyParts));
+            if (elements.size() <= 3) {
+                qWarning() << "Unable to decode invalid remote action:" << hint;
+            } else {
+                int index = 0;
+                action.insert(QStringLiteral("service"), elements.at(index++));
+                action.insert(QStringLiteral("path"), elements.at(index++));
+                action.insert(QStringLiteral("iface"), elements.at(index++));
+                action.insert(QStringLiteral("method"), elements.at(index++));
+
+                QVariantList args;
+                while (index < elements.size()) {
+                    const QString &arg(elements.at(index++));
+                    const QByteArray buffer(QByteArray::fromBase64(arg.toUtf8()));
+
+                    QDataStream stream(buffer);
+                    QVariant var;
+                    stream >> var;
+                    args.append(var);
+                }
+                action.insert(QStringLiteral("arguments"), args);
+
+                action.insert(QStringLiteral("name"), actionName);
+                action.insert(QStringLiteral("displayName"), displayName);
+
+                const QString iconHintName = QString(HINT_REMOTE_ACTION_ICON_PREFIX) + actionName;
+                const QString &iconHint = hints[iconHintName].toString();
+                if (!iconHint.isEmpty()) {
+                    action.insert(QStringLiteral("icon"), iconHint);
+                }
+
+                rv.append(action);
+            }
+        }
+    }
+
+    return rv;
+}
+
 }
 
 /*!
@@ -83,11 +234,25 @@ NotificationManagerProxy *notificationManager()
             previewBody: "Notification preview body"
             itemCount: 5
             timestamp: "2013-02-20 18:21:00"
-            remoteDBusCallServiceName: "org.nemomobile.example"
-            remoteDBusCallObjectPath: "/example"
-            remoteDBusCallInterface: "org.nemomobile.example"
-            remoteDBusCallMethodName: "doSomething"
-            remoteDBusCallArguments: [ "argument", 1 ]
+            remoteActions: [ {
+                "name": "default",
+                "displayName": "Do something",
+                "icon": "icon-s-do-it",
+                "service": "org.nemomobile.example",
+                "path": "/example",
+                "iface": "org.nemomobile.example",
+                "method": "doSomething",
+                "arguments": [ "argument", 1 ]
+            },{
+                "name": "ignore",
+                "displayName": "Ignore the problem",
+                "icon": "icon-s-ignore",
+                "service": "org.nemomobile.example",
+                "path": "/example",
+                "iface": "org.nemomobile.example",
+                "method": "ignore",
+                "arguments": [ "argument", 1 ]
+            } ]
             onClicked: console.log("Clicked")
             onClosed: console.log("Closed, reason: " + reason)
         }
@@ -276,7 +441,7 @@ void Notification::setItemCount(int itemCount)
 */
 void Notification::publish()
 {
-    setReplacesId(notificationManager()->Notify(appName(), replacesId_, QString(), summary_, body_, (QStringList() << "default" << ""), hints_, -1));
+    setReplacesId(notificationManager()->Notify(appName(), replacesId_, QString(), summary_, body_, encodeActions(actions_), hints_, -1));
 }
 
 /*!
@@ -299,8 +464,10 @@ void Notification::close()
 */
 void Notification::checkActionInvoked(uint id, QString actionKey)
 {
-    if (id == replacesId_ && actionKey == "default") {
-        emit clicked();
+    if (id == replacesId_) {
+        if (actionKey == DEFAULT_ACTION_NAME) {
+            emit clicked();
+        }
     }
 }
 
@@ -415,26 +582,57 @@ void Notification::setRemoteActionHint()
     QString s;
 
     if (!remoteDBusCallServiceName_.isEmpty() && !remoteDBusCallObjectPath_.isEmpty() && !remoteDBusCallInterface_.isEmpty() && !remoteDBusCallMethodName_.isEmpty()) {
-        s.append(remoteDBusCallServiceName_).append(' ');
-        s.append(remoteDBusCallObjectPath_).append(' ');
-        s.append(remoteDBusCallInterface_).append(' ');
-        s.append(remoteDBusCallMethodName_);
-
-        foreach(const QVariant &arg, remoteDBusCallArguments_) {
-            // Serialize the QVariant into a QBuffer
-            QBuffer buffer;
-            buffer.open(QIODevice::ReadWrite);
-            QDataStream stream(&buffer);
-            stream << arg;
-            buffer.close();
-
-            // Encode the contents of the QBuffer in Base64
-            s.append(' ');
-            s.append(buffer.buffer().toBase64().data());
-        }
+        s = encodeDBusCall(remoteDBusCallServiceName_,
+                           remoteDBusCallObjectPath_,
+                           remoteDBusCallInterface_,
+                           remoteDBusCallMethodName_,
+                           remoteDBusCallArguments_);
     }
 
-    hints_.insert(HINT_REMOTE_ACTION, s);
+    hints_.insert(QString(HINT_REMOTE_ACTION_PREFIX) + DEFAULT_ACTION_NAME, s);
+    actions_.insert(DEFAULT_ACTION_NAME, QString());
+}
+
+/*!
+    \qmlproperty QVariantList Notification::remoteActions
+
+    The remote actions registered for potential invocation by this notification.
+ */
+QVariantList Notification::remoteActions() const
+{
+    return remoteActions_;
+}
+
+void Notification::setRemoteActions(const QVariantList &remoteActions)
+{
+    if (remoteActions != remoteActions_) {
+        // Remove any existing actions
+        foreach (const QVariant &action, remoteActions_) {
+            QVariantMap vm = action.value<QVariantMap>();
+            const QString actionName = vm["name"].value<QString>();
+            if (!actionName.isEmpty()) {
+                hints_.remove(QString(HINT_REMOTE_ACTION_PREFIX) + actionName);
+                actions_.remove(actionName);
+            }
+        }
+
+        // Add the new actions and their associated hints
+        remoteActions_ = remoteActions;
+
+        QPair<QHash<QString, QString>, QVariantHash> actionHints = encodeActionHints(remoteActions);
+
+        QHash<QString, QString>::const_iterator ait = actionHints.first.constBegin(), aend = actionHints.first.constEnd();
+        for ( ; ait != aend; ++ait) {
+            actions_.insert(ait.key(), ait.value());
+        }
+
+        QVariantHash::const_iterator hit = actionHints.second.constBegin(), hend = actionHints.second.constEnd();
+        for ( ; hit != hend; ++hit) {
+            hints_.insert(hit.key(), hit.value());
+        }
+
+        emit remoteActionsChanged();
+    }
 }
 
 /*!
@@ -482,7 +680,9 @@ Notification::Notification(const Notification &notification) :
     replacesId_(notification.replacesId_),
     summary_(notification.summary_),
     body_(notification.body_),
+    actions_(notification.actions_),
     hints_(notification.hints_),
+    remoteActions_(notification.remoteActions_),
     remoteDBusCallServiceName_(notification.remoteDBusCallServiceName_),
     remoteDBusCallObjectPath_(notification.remoteDBusCallObjectPath_),
     remoteDBusCallInterface_(notification.remoteDBusCallInterface_),
@@ -499,7 +699,7 @@ QDBusArgument &operator<<(QDBusArgument &argument, const Notification &notificat
     argument << QString();
     argument << notification.summary_;
     argument << notification.body_;
-    argument << (QStringList() << "default" << "");
+    argument << encodeActions(notification.actions_);
     argument << notification.hints_;
     argument << -1;
     argument.endStructure();
@@ -522,5 +722,9 @@ const QDBusArgument &operator>>(const QDBusArgument &argument, Notification &not
     argument >> notification.hints_;
     argument >> tempInt;
     argument.endStructure();
+
+    notification.actions_ = decodeActions(tempStringList);
+    notification.remoteActions_ = decodeActionHints(notification.actions_, notification.hints_);
+
     return argument;
 }
