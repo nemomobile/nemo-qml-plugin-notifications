@@ -40,6 +40,7 @@ const char *HINT_CATEGORY = "category";
 const char *HINT_ITEM_COUNT = "x-nemo-item-count";
 const char *HINT_TIMESTAMP = "x-nemo-timestamp";
 const char *HINT_PREVIEW_BODY = "x-nemo-preview-body";
+const char *HINT_PREVIEW_BODY_DETAIL = "x-nemo-preview-body-detail";
 const char *HINT_PREVIEW_SUMMARY = "x-nemo-preview-summary";
 const char *HINT_REMOTE_ACTION_PREFIX = "x-nemo-remote-action-";
 const char *HINT_REMOTE_ACTION_ICON_PREFIX = "x-nemo-remote-action-icon-";
@@ -411,6 +412,24 @@ void Notification::setPreviewBody(const QString &previewBody)
     if (previewBody != this->previewBody()) {
         hints_.insert(HINT_PREVIEW_BODY, previewBody);
         emit previewBodyChanged();
+    }
+}
+
+/*!
+    \qmlproperty QString Notification::previewBodyDetail
+
+    Detailed body text to be shown when the preview for the notification provides a detailed view, if any. Defaults to an empty string.
+ */
+QString Notification::previewBodyDetail() const
+{
+    return hints_.value(HINT_PREVIEW_BODY_DETAIL).toString();
+}
+
+void Notification::setPreviewBodyDetail(const QString &previewBodyDetail)
+{
+    if (previewBodyDetail != this->previewBodyDetail()) {
+        hints_.insert(HINT_PREVIEW_BODY_DETAIL, previewBodyDetail);
+        emit previewBodyDetailChanged();
     }
 }
 
