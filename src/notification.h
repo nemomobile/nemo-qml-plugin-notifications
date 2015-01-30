@@ -73,6 +73,10 @@ public:
     QString previewBody() const;
     void setPreviewBody(const QString &previewBody);
 
+    Q_PROPERTY(QString previewBodyDetail READ previewBodyDetail WRITE setPreviewBodyDetail NOTIFY previewBodyDetailChanged)
+    QString previewBodyDetail() const;
+    void setPreviewBodyDetail(const QString &previewBodyDetail);
+
     Q_PROPERTY(int itemCount READ itemCount WRITE setItemCount NOTIFY itemCountChanged)
     int itemCount() const;
     void setItemCount(int itemCount);
@@ -124,6 +128,7 @@ signals:
     void timestampChanged();
     void previewSummaryChanged();
     void previewBodyChanged();
+    void previewBodyDetailChanged();
     void itemCountChanged();
     void remoteActionsChanged();
     void remoteDBusCallChanged();
