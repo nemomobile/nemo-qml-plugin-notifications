@@ -139,7 +139,6 @@ private:
     uint replacesId_;
     QString summary_;
     QString body_;
-    QHash<QString, QString> actions_;
     QVariantHash hints_;
     QVariantList remoteActions_;
     QString remoteDBusCallServiceName_;
@@ -147,6 +146,7 @@ private:
     QString remoteDBusCallInterface_;
     QString remoteDBusCallMethodName_;
     QVariantList remoteDBusCallArguments_;
+    QHash<QString, QString> actions_;
 };
 
 Q_DECLARE_METATYPE(Notification)
