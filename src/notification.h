@@ -160,14 +160,14 @@ signals:
     void remoteActionsChanged();
     void remoteDBusCallChanged();
 
-protected:
-    QScopedPointer<NotificationPrivate> data;
-
 private slots:
     void checkActionInvoked(uint id, QString actionKey);
     void checkNotificationClosed(uint id, uint reason);
 
 private:
+    NotificationPrivate * const d_ptr;
+    Q_DECLARE_PRIVATE(Notification)
+
     static Notification *createNotification(const NotificationData &data, QObject *parent = 0);
 };
 

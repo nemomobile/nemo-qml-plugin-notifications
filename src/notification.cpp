@@ -336,7 +336,7 @@ class NotificationPrivate : public NotificationData
  */
 Notification::Notification(QObject *parent) :
     QObject(parent),
-    data(new NotificationPrivate)
+    d_ptr(new NotificationPrivate)
 {
     connect(notificationManager(), SIGNAL(ActionInvoked(uint,QString)), this, SLOT(checkActionInvoked(uint,QString)));
     connect(notificationManager(), SIGNAL(NotificationClosed(uint,uint)), this, SLOT(checkNotificationClosed(uint,uint)));
@@ -344,6 +344,7 @@ Notification::Notification(QObject *parent) :
 
 Notification::~Notification()
 {
+    delete d_ptr;
 }
 
 /*!
@@ -353,13 +354,15 @@ Notification::~Notification()
  */
 QString Notification::category() const
 {
-    return data->hints.value(HINT_CATEGORY).toString();
+    Q_D(const Notification);
+    return d->hints.value(HINT_CATEGORY).toString();
 }
 
 void Notification::setCategory(const QString &category)
 {
+    Q_D(Notification);
     if (category != this->category()) {
-        data->hints.insert(HINT_CATEGORY, category);
+        d->hints.insert(HINT_CATEGORY, category);
         emit categoryChanged();
     }
 }
@@ -374,13 +377,15 @@ void Notification::setCategory(const QString &category)
  */
 QString Notification::appName() const
 {
-    return !data->appName.isEmpty() ? data->appName : processName();
+    Q_D(const Notification);
+    return !d->appName.isEmpty() ? d->appName : processName();
 }
 
 void Notification::setAppName(const QString &appName)
 {
+    Q_D(Notification);
     if (appName != this->appName()) {
-        data->appName = appName;
+        d->appName = appName;
         emit appNameChanged();
     }
 }
@@ -392,13 +397,15 @@ void Notification::setAppName(const QString &appName)
  */
 uint Notification::replacesId() const
 {
-    return data->replacesId;
+    Q_D(const Notification);
+    return d->replacesId;
 }
 
 void Notification::setReplacesId(uint id)
 {
-    if (data->replacesId != id) {
-        data->replacesId = id;
+    Q_D(Notification);
+    if (d->replacesId != id) {
+        d->replacesId = id;
         emit replacesIdChanged();
     }
 }
@@ -410,13 +417,15 @@ void Notification::setReplacesId(uint id)
  */
 QString Notification::appIcon() const
 {
-    return data->appIcon;
+    Q_D(const Notification);
+    return d->appIcon;
 }
 
 void Notification::setAppIcon(const QString &appIcon)
 {
+    Q_D(Notification);
     if (appIcon != this->appIcon()) {
-        data->appIcon = appIcon;
+        d->appIcon = appIcon;
         emit appIconChanged();
     }
 }
@@ -428,13 +437,15 @@ void Notification::setAppIcon(const QString &appIcon)
  */
 QString Notification::summary() const
 {
-    return data->summary;
+    Q_D(const Notification);
+    return d->summary;
 }
 
 void Notification::setSummary(const QString &summary)
 {
-    if (data->summary != summary) {
-        data->summary = summary;
+    Q_D(Notification);
+    if (d->summary != summary) {
+        d->summary = summary;
         emit summaryChanged();
     }
 }
@@ -446,13 +457,15 @@ void Notification::setSummary(const QString &summary)
  */
 QString Notification::body() const
 {
-    return data->body;
+    Q_D(const Notification);
+    return d->body;
 }
 
 void Notification::setBody(const QString &body)
 {
-    if (data->body != body) {
-        data->body = body;
+    Q_D(Notification);
+    if (d->body != body) {
+        d->body = body;
         emit bodyChanged();
     }
 }
@@ -467,13 +480,15 @@ void Notification::setBody(const QString &body)
  */
 qint32 Notification::expireTimeout() const
 {
-    return data->expireTimeout;
+    Q_D(const Notification);
+    return d->expireTimeout;
 }
 
 void Notification::setExpireTimeout(qint32 milliseconds)
 {
-    if (milliseconds != data->expireTimeout) {
-        data->expireTimeout = milliseconds;
+    Q_D(Notification);
+    if (milliseconds != d->expireTimeout) {
+        d->expireTimeout = milliseconds;
         emit expireTimeoutChanged();
     }
 }
@@ -485,13 +500,15 @@ void Notification::setExpireTimeout(qint32 milliseconds)
  */
 QDateTime Notification::timestamp() const
 {
-    return data->hints.value(HINT_TIMESTAMP).toDateTime();
+    Q_D(const Notification);
+    return d->hints.value(HINT_TIMESTAMP).toDateTime();
 }
 
 void Notification::setTimestamp(const QDateTime &timestamp)
 {
+    Q_D(Notification);
     if (timestamp != this->timestamp()) {
-        data->hints.insert(HINT_TIMESTAMP, timestamp.toString(Qt::ISODate));
+        d->hints.insert(HINT_TIMESTAMP, timestamp.toString(Qt::ISODate));
         emit timestampChanged();
     }
 }
@@ -503,13 +520,15 @@ void Notification::setTimestamp(const QDateTime &timestamp)
  */
 QString Notification::previewSummary() const
 {
-    return data->hints.value(HINT_PREVIEW_SUMMARY).toString();
+    Q_D(const Notification);
+    return d->hints.value(HINT_PREVIEW_SUMMARY).toString();
 }
 
 void Notification::setPreviewSummary(const QString &previewSummary)
 {
+    Q_D(Notification);
     if (previewSummary != this->previewSummary()) {
-        data->hints.insert(HINT_PREVIEW_SUMMARY, previewSummary);
+        d->hints.insert(HINT_PREVIEW_SUMMARY, previewSummary);
         emit previewSummaryChanged();
     }
 }
@@ -521,13 +540,15 @@ void Notification::setPreviewSummary(const QString &previewSummary)
  */
 QString Notification::previewBody() const
 {
-    return data->hints.value(HINT_PREVIEW_BODY).toString();
+    Q_D(const Notification);
+    return d->hints.value(HINT_PREVIEW_BODY).toString();
 }
 
 void Notification::setPreviewBody(const QString &previewBody)
 {
+    Q_D(Notification);
     if (previewBody != this->previewBody()) {
-        data->hints.insert(HINT_PREVIEW_BODY, previewBody);
+        d->hints.insert(HINT_PREVIEW_BODY, previewBody);
         emit previewBodyChanged();
     }
 }
@@ -539,13 +560,15 @@ void Notification::setPreviewBody(const QString &previewBody)
  */
 int Notification::itemCount() const
 {
-    return data->hints.value(HINT_ITEM_COUNT).toInt();
+    Q_D(const Notification);
+    return d->hints.value(HINT_ITEM_COUNT).toInt();
 }
 
 void Notification::setItemCount(int itemCount)
 {
+    Q_D(Notification);
     if (itemCount != this->itemCount()) {
-        data->hints.insert(HINT_ITEM_COUNT, itemCount);
+        d->hints.insert(HINT_ITEM_COUNT, itemCount);
         emit itemCountChanged();
     }
 }
@@ -559,8 +582,9 @@ void Notification::setItemCount(int itemCount)
 */
 void Notification::publish()
 {
-    setReplacesId(notificationManager()->Notify(appName(), data->replacesId, data->appIcon, data->summary, data->body,
-                                                encodeActions(data->actions), data->hints, data->expireTimeout));
+    Q_D(Notification);
+    setReplacesId(notificationManager()->Notify(appName(), d->replacesId, d->appIcon, d->summary, d->body,
+                                                encodeActions(d->actions), d->hints, d->expireTimeout));
 }
 
 /*!
@@ -570,8 +594,9 @@ void Notification::publish()
 */
 void Notification::close()
 {
-    if (data->replacesId != 0) {
-        notificationManager()->CloseNotification(data->replacesId);
+    Q_D(Notification);
+    if (d->replacesId != 0) {
+        notificationManager()->CloseNotification(d->replacesId);
         setReplacesId(0);
     }
 }
@@ -583,7 +608,8 @@ void Notification::close()
 */
 void Notification::checkActionInvoked(uint id, QString actionKey)
 {
-    if (id == data->replacesId) {
+    Q_D(Notification);
+    if (id == d->replacesId) {
         if (actionKey == DEFAULT_ACTION_NAME) {
             emit clicked();
         }
@@ -600,7 +626,8 @@ void Notification::checkActionInvoked(uint id, QString actionKey)
 */
 void Notification::checkNotificationClosed(uint id, uint reason)
 {
-    if (id == data->replacesId) {
+    Q_D(Notification);
+    if (id == d->replacesId) {
         emit closed(reason);
         setReplacesId(0);
     }
@@ -613,16 +640,18 @@ void Notification::checkNotificationClosed(uint id, uint reason)
  */
 QString Notification::remoteDBusCallServiceName() const
 {
-    QVariantMap vm(data->firstRemoteAction());
+    Q_D(const Notification);
+    QVariantMap vm(d->firstRemoteAction());
     return vm["name"].value<QString>();
 }
 
 void Notification::setRemoteDBusCallServiceName(const QString &serviceName)
 {
-    QVariantMap vm(data->firstRemoteAction());
+    Q_D(Notification);
+    QVariantMap vm(d->firstRemoteAction());
     if (vm["name"].value<QString>() != serviceName) {
         vm.insert("name", serviceName);
-        data->setFirstRemoteAction(vm);
+        d->setFirstRemoteAction(vm);
 
         emit remoteActionsChanged();
         emit remoteDBusCallChanged();
@@ -636,16 +665,18 @@ void Notification::setRemoteDBusCallServiceName(const QString &serviceName)
  */
 QString Notification::remoteDBusCallObjectPath() const
 {
-    QVariantMap vm(data->firstRemoteAction());
+    Q_D(const Notification);
+    QVariantMap vm(d->firstRemoteAction());
     return vm["path"].value<QString>();
 }
 
 void Notification::setRemoteDBusCallObjectPath(const QString &objectPath)
 {
-    QVariantMap vm(data->firstRemoteAction());
+    Q_D(Notification);
+    QVariantMap vm(d->firstRemoteAction());
     if (vm["path"].value<QString>() != objectPath) {
         vm.insert("path", objectPath);
-        data->setFirstRemoteAction(vm);
+        d->setFirstRemoteAction(vm);
 
         emit remoteActionsChanged();
         emit remoteDBusCallChanged();
@@ -659,16 +690,18 @@ void Notification::setRemoteDBusCallObjectPath(const QString &objectPath)
  */
 QString Notification::remoteDBusCallInterface() const
 {
-    QVariantMap vm(data->firstRemoteAction());
+    Q_D(const Notification);
+    QVariantMap vm(d->firstRemoteAction());
     return vm["iface"].value<QString>();
 }
 
 void Notification::setRemoteDBusCallInterface(const QString &interface)
 {
-    QVariantMap vm(data->firstRemoteAction());
+    Q_D(Notification);
+    QVariantMap vm(d->firstRemoteAction());
     if (vm["iface"].value<QString>() != interface) {
         vm.insert("iface", interface);
-        data->setFirstRemoteAction(vm);
+        d->setFirstRemoteAction(vm);
 
         emit remoteActionsChanged();
         emit remoteDBusCallChanged();
@@ -682,16 +715,18 @@ void Notification::setRemoteDBusCallInterface(const QString &interface)
  */
 QString Notification::remoteDBusCallMethodName() const
 {
-    QVariantMap vm(data->firstRemoteAction());
+    Q_D(const Notification);
+    QVariantMap vm(d->firstRemoteAction());
     return vm["method"].value<QString>();
 }
 
 void Notification::setRemoteDBusCallMethodName(const QString &methodName)
 {
-    QVariantMap vm(data->firstRemoteAction());
+    Q_D(Notification);
+    QVariantMap vm(d->firstRemoteAction());
     if (vm["method"].value<QString>() != methodName) {
         vm.insert("method", methodName);
-        data->setFirstRemoteAction(vm);
+        d->setFirstRemoteAction(vm);
 
         emit remoteActionsChanged();
         emit remoteDBusCallChanged();
@@ -705,16 +740,18 @@ void Notification::setRemoteDBusCallMethodName(const QString &methodName)
  */
 QVariantList Notification::remoteDBusCallArguments() const
 {
-    QVariantMap vm(data->firstRemoteAction());
+    Q_D(const Notification);
+    QVariantMap vm(d->firstRemoteAction());
     return vm["arguments"].value<QVariantList>();
 }
 
 void Notification::setRemoteDBusCallArguments(const QVariantList &arguments)
 {
-    QVariantMap vm(data->firstRemoteAction());
+    Q_D(Notification);
+    QVariantMap vm(d->firstRemoteAction());
     if (vm["arguments"].value<QVariantList>() != arguments) {
         vm.insert("arguments", arguments);
-        data->setFirstRemoteAction(vm);
+        d->setFirstRemoteAction(vm);
 
         emit remoteActionsChanged();
         emit remoteDBusCallChanged();
@@ -728,35 +765,37 @@ void Notification::setRemoteDBusCallArguments(const QVariantList &arguments)
  */
 QVariantList Notification::remoteActions() const
 {
-    return data->remoteActions;
+    Q_D(const Notification);
+    return d->remoteActions;
 }
 
 void Notification::setRemoteActions(const QVariantList &remoteActions)
 {
-    if (remoteActions != data->remoteActions) {
+    Q_D(Notification);
+    if (remoteActions != d->remoteActions) {
         // Remove any existing actions
-        foreach (const QVariant &action, data->remoteActions) {
+        foreach (const QVariant &action, d->remoteActions) {
             QVariantMap vm = action.value<QVariantMap>();
             const QString actionName = vm["name"].value<QString>();
             if (!actionName.isEmpty()) {
-                data->hints.remove(QString(HINT_REMOTE_ACTION_PREFIX) + actionName);
-                data->actions.remove(actionName);
+                d->hints.remove(QString(HINT_REMOTE_ACTION_PREFIX) + actionName);
+                d->actions.remove(actionName);
             }
         }
 
         // Add the new actions and their associated hints
-        data->remoteActions = remoteActions;
+        d->remoteActions = remoteActions;
 
         QPair<QHash<QString, QString>, QVariantHash> actionHints = encodeActionHints(remoteActions);
 
         QHash<QString, QString>::const_iterator ait = actionHints.first.constBegin(), aend = actionHints.first.constEnd();
         for ( ; ait != aend; ++ait) {
-            data->actions.insert(ait.key(), ait.value());
+            d->actions.insert(ait.key(), ait.value());
         }
 
         QVariantHash::const_iterator hit = actionHints.second.constBegin(), hend = actionHints.second.constEnd();
         for ( ; hit != hend; ++hit) {
-            data->hints.insert(hit.key(), hit.value());
+            d->hints.insert(hit.key(), hit.value());
         }
 
         emit remoteActionsChanged();
@@ -771,7 +810,8 @@ void Notification::setRemoteActions(const QVariantList &remoteActions)
 */
 QVariant Notification::hintValue(const QString &hint) const
 {
-    return data->hints.value(hint);
+    Q_D(const Notification);
+    return d->hints.value(hint);
 }
 
 /*!
@@ -781,7 +821,8 @@ QVariant Notification::hintValue(const QString &hint) const
 */
 void Notification::setHintValue(const QString &hint, const QVariant &value)
 {
-    data->hints.insert(hint, value);
+    Q_D(Notification);
+    d->hints.insert(hint, value);
 }
 
 /*!
@@ -818,7 +859,7 @@ QList<QObject*> Notification::notifications(const QString &appName)
 Notification *Notification::createNotification(const NotificationData &data, QObject *parent)
 {
     Notification *notification = new Notification(parent);
-    *notification->data = data;
+    *notification->d_func() = data;
     return notification;
 }
 
