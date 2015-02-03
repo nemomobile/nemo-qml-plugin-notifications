@@ -166,7 +166,6 @@ protected:
 private slots:
     void checkActionInvoked(uint id, QString actionKey);
     void checkNotificationClosed(uint id, uint reason);
-    void setRemoteActionHint();
 
 private:
     static Notification *createNotification(const NotificationData &data, QObject *parent = 0);
