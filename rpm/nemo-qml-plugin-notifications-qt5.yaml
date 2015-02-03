@@ -3,7 +3,7 @@ Summary: Notifications plugin for Nemo Mobile
 URL: https://github.com/nemomobile/nemo-qml-plugin-notifications
 Group: System/Libraries
 Description: "%{summary}."
-Version: 0.0.9
+Version: 1.0.0
 Release: 1
 Sources:
     - "%{name}-%{version}.tar.bz2"
