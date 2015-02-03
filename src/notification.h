@@ -141,8 +141,6 @@ public:
     Q_INVOKABLE static QList<QObject*> notifications();
     Q_INVOKABLE static QList<QObject*> notifications(const QString &appName);
 
-    explicit Notification(const Notification &notification);
-
 signals:
     void clicked();
     void closed(uint reason);
@@ -167,6 +165,8 @@ private slots:
 private:
     NotificationPrivate * const d_ptr;
     Q_DECLARE_PRIVATE(Notification)
+
+    Notification(const NotificationData &data, QObject *parent = 0);
 
     static Notification *createNotification(const NotificationData &data, QObject *parent = 0);
 };

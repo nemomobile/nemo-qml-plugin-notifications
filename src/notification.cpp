@@ -228,12 +228,6 @@ class NotificationPrivate : public NotificationData
     {
     }
 
-    NotificationPrivate &operator=(const NotificationData &data)
-    {
-        *this = NotificationPrivate(data);
-        return *this;
-    }
-
     QVariantMap firstRemoteAction() const
     {
         QVariantMap vm;
@@ -337,6 +331,14 @@ class NotificationPrivate : public NotificationData
 Notification::Notification(QObject *parent) :
     QObject(parent),
     d_ptr(new NotificationPrivate)
+{
+    connect(notificationManager(), SIGNAL(ActionInvoked(uint,QString)), this, SLOT(checkActionInvoked(uint,QString)));
+    connect(notificationManager(), SIGNAL(NotificationClosed(uint,uint)), this, SLOT(checkNotificationClosed(uint,uint)));
+}
+
+Notification::Notification(const NotificationData &data, QObject *parent) :
+    QObject(parent),
+    d_ptr(new NotificationPrivate(data))
 {
     connect(notificationManager(), SIGNAL(ActionInvoked(uint,QString)), this, SLOT(checkActionInvoked(uint,QString)));
     connect(notificationManager(), SIGNAL(NotificationClosed(uint,uint)), this, SLOT(checkNotificationClosed(uint,uint)));
@@ -858,9 +860,7 @@ QList<QObject*> Notification::notifications(const QString &appName)
 
 Notification *Notification::createNotification(const NotificationData &data, QObject *parent)
 {
-    Notification *notification = new Notification(parent);
-    *notification->d_func() = data;
-    return notification;
+    return new Notification(data, parent);
 }
 
 QDBusArgument &operator<<(QDBusArgument &argument, const NotificationData &data)
