@@ -42,11 +42,14 @@ struct NotificationData
 {
     NotificationData();
 
-    uint replacesId;
+    QString appName;
+    quint32 replacesId;
+    QString appIcon;
     QString summary;
     QString body;
     QHash<QString, QString> actions;
     QVariantHash hints;
+    qint32 expireTimeout;
 };
 
 class NotificationManagerProxy;
@@ -63,9 +66,17 @@ public:
     QString category() const;
     void setCategory(const QString &category);
 
-    Q_PROPERTY(uint replacesId READ replacesId WRITE setReplacesId NOTIFY replacesIdChanged)
-    uint replacesId() const;
-    void setReplacesId(uint id);
+    Q_PROPERTY(QString appName READ appName WRITE setAppName NOTIFY appNameChanged)
+    QString appName() const;
+    void setAppName(const QString &appName);
+
+    Q_PROPERTY(quint32 replacesId READ replacesId WRITE setReplacesId NOTIFY replacesIdChanged)
+    quint32 replacesId() const;
+    void setReplacesId(quint32 id);
+
+    Q_PROPERTY(QString appIcon READ appIcon WRITE setAppIcon NOTIFY appIconChanged)
+    QString appIcon() const;
+    void setAppIcon(const QString &appIcon);
 
     Q_PROPERTY(QString summary READ summary WRITE setSummary NOTIFY summaryChanged)
     QString summary() const;
@@ -74,6 +85,10 @@ public:
     Q_PROPERTY(QString body READ body WRITE setBody NOTIFY bodyChanged)
     QString body() const;
     void setBody(const QString &body);
+
+    Q_PROPERTY(qint32 expireTimeout READ expireTimeout WRITE setExpireTimeout NOTIFY expireTimeoutChanged)
+    qint32 expireTimeout() const;
+    void setExpireTimeout(qint32 milliseconds);
 
     Q_PROPERTY(QDateTime timestamp READ timestamp WRITE setTimestamp NOTIFY timestampChanged)
     QDateTime timestamp() const;
@@ -122,7 +137,9 @@ public:
 
     Q_INVOKABLE void publish();
     Q_INVOKABLE void close();
+
     Q_INVOKABLE static QList<QObject*> notifications();
+    Q_INVOKABLE static QList<QObject*> notifications(const QString &appName);
 
     explicit Notification(const Notification &notification);
 
@@ -130,9 +147,12 @@ signals:
     void clicked();
     void closed(uint reason);
     void categoryChanged();
+    void appNameChanged();
     void replacesIdChanged();
+    void appIconChanged();
     void summaryChanged();
     void bodyChanged();
+    void expireTimeoutChanged();
     void timestampChanged();
     void previewSummaryChanged();
     void previewBodyChanged();

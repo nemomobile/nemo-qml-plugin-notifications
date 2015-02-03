@@ -45,7 +45,7 @@ const char *HINT_REMOTE_ACTION_PREFIX = "x-nemo-remote-action-";
 const char *HINT_REMOTE_ACTION_ICON_PREFIX = "x-nemo-remote-action-icon-";
 const char *DEFAULT_ACTION_NAME = "default";
 
-static inline QString appName() {
+static inline QString processName() {
     return QFileInfo(QCoreApplication::arguments()[0]).fileName();
 }
 
@@ -209,6 +209,7 @@ QVariantList decodeActionHints(const QHash<QString, QString> &actions, const QVa
 
 NotificationData::NotificationData()
     : replacesId(0)
+    , expireTimeout(-1)
 {
 }
 
@@ -266,6 +267,8 @@ class NotificationPrivate : public NotificationData
         Notification {
             id: notification
             category: "x-nemo.example"
+            appName: "Example App"
+            appIcon: "/usr/share/example-app/icon-l-application"
             summary: "Notification summary"
             body: "Notification body"
             previewSummary: "Notification preview summary"
@@ -349,6 +352,27 @@ void Notification::setCategory(const QString &category)
 }
 
 /*!
+    \qmlproperty QString Notification::appName
+
+    The application name associated with this notification, for display purposes.
+
+    The application name should be the formal name, localized if appropriate.
+    If not set, the name of the current process is returned.
+ */
+QString Notification::appName() const
+{
+    return !data->appName.isEmpty() ? data->appName : processName();
+}
+
+void Notification::setAppName(const QString &appName)
+{
+    if (appName != this->appName()) {
+        data->appName = appName;
+        emit appNameChanged();
+    }
+}
+
+/*!
     \qmlproperty uint Notification::replacesId
 
     The optional notification ID that this notification replaces. The server must atomically (ie with no flicker or other visual cues) replace the given notification with this one. This allows clients to effectively modify the notification while it's active. A value of value of 0 means that this notification won't replace any existing notifications. Defaults to 0.
@@ -363,6 +387,24 @@ void Notification::setReplacesId(uint id)
     if (data->replacesId != id) {
         data->replacesId = id;
         emit replacesIdChanged();
+    }
+}
+
+/*!
+    \qmlproperty QString Notification::appIcon
+
+    The icon associated with this notification's application. Defaults to empty.
+ */
+QString Notification::appIcon() const
+{
+    return data->appIcon;
+}
+
+void Notification::setAppIcon(const QString &appIcon)
+{
+    if (appIcon != this->appIcon()) {
+        data->appIcon = appIcon;
+        emit appIconChanged();
     }
 }
 
@@ -399,6 +441,27 @@ void Notification::setBody(const QString &body)
     if (data->body != body) {
         data->body = body;
         emit bodyChanged();
+    }
+}
+
+/*!
+    \qmlproperty int32 Notification::expireTimeout
+
+    The number of milliseconds after display at which the notification should be automatically closed.
+    ExpireTimeout of zero indicates that the notification should not close automatically.
+
+    Defaults to -1, indicating that the notification manager should decide the expiration timeout.
+ */
+qint32 Notification::expireTimeout() const
+{
+    return data->expireTimeout;
+}
+
+void Notification::setExpireTimeout(qint32 milliseconds)
+{
+    if (milliseconds != data->expireTimeout) {
+        data->expireTimeout = milliseconds;
+        emit expireTimeoutChanged();
     }
 }
 
@@ -483,8 +546,8 @@ void Notification::setItemCount(int itemCount)
 */
 void Notification::publish()
 {
-    setReplacesId(notificationManager()->Notify(appName(), data->replacesId, QString(), data->summary, data->body,
-                                                encodeActions(data->actions), data->hints, -1));
+    setReplacesId(notificationManager()->Notify(appName(), data->replacesId, data->appIcon, data->summary, data->body,
+                                                encodeActions(data->actions), data->hints, data->expireTimeout));
 }
 
 /*!
@@ -711,7 +774,20 @@ void Notification::setHintValue(const QString &hint, const QVariant &value)
 */
 QList<QObject*> Notification::notifications()
 {
-    QList<NotificationData> notifications = notificationManager()->GetNotifications(appName());
+    return notifications(processName());
+}
+
+/*!
+    \qmlmethod void Notification::notifications(const QString &appName)
+
+    Returns a list of notifications matching the supplied \a appName.
+    The returned objects are Notification components. They are only destroyed
+    when the application is closed, so the caller should take their ownership
+    and destroy them when they are not used anymore.
+*/
+QList<QObject*> Notification::notifications(const QString &appName)
+{
+    QList<NotificationData> notifications = notificationManager()->GetNotifications(appName);
     QList<QObject*> objects;
     foreach (const NotificationData &notification, notifications) {
         objects.append(createNotification(notification, notificationManager()));
@@ -729,33 +805,31 @@ Notification *Notification::createNotification(const NotificationData &data, QOb
 QDBusArgument &operator<<(QDBusArgument &argument, const NotificationData &data)
 {
     argument.beginStructure();
-    argument << appName();
+    argument << (!data.appName.isEmpty() ? data.appName : processName());
     argument << data.replacesId;
-    argument << QString();
+    argument << data.appIcon;
     argument << data.summary;
     argument << data.body;
     argument << encodeActions(data.actions);
     argument << data.hints;
-    argument << -1;
+    argument << data.expireTimeout;
     argument.endStructure();
     return argument;
 }
 
 const QDBusArgument &operator>>(const QDBusArgument &argument, NotificationData &data)
 {
-    QString tempString;
     QStringList tempStringList;
-    int tempInt;
 
     argument.beginStructure();
-    argument >> tempString;
+    argument >> data.appName;
     argument >> data.replacesId;
-    argument >> tempString;
+    argument >> data.appIcon;
     argument >> data.summary;
     argument >> data.body;
     argument >> tempStringList;
     argument >> data.hints;
-    argument >> tempInt;
+    argument >> data.expireTimeout;
     argument.endStructure();
 
     data.actions = decodeActions(tempStringList);
