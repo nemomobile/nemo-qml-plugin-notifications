@@ -38,20 +38,45 @@
 #include <QVariantHash>
 #include <QDBusArgument>
 
+struct NotificationData
+{
+    NotificationData();
+
+    QString appName;
+    quint32 replacesId;
+    QString appIcon;
+    QString summary;
+    QString body;
+    QHash<QString, QString> actions;
+    QVariantHash hints;
+    qint32 expireTimeout;
+};
+
+class NotificationManagerProxy;
+class NotificationPrivate;
 class Q_DECL_EXPORT Notification : public QObject
 {
     Q_OBJECT
 
 public:
-    Notification(QObject *parent = 0);
+    explicit Notification(QObject *parent = 0);
+    virtual ~Notification();
 
     Q_PROPERTY(QString category READ category WRITE setCategory NOTIFY categoryChanged)
     QString category() const;
     void setCategory(const QString &category);
 
-    Q_PROPERTY(uint replacesId READ replacesId WRITE setReplacesId NOTIFY replacesIdChanged)
-    uint replacesId() const;
-    void setReplacesId(uint id);
+    Q_PROPERTY(QString appName READ appName WRITE setAppName NOTIFY appNameChanged)
+    QString appName() const;
+    void setAppName(const QString &appName);
+
+    Q_PROPERTY(quint32 replacesId READ replacesId WRITE setReplacesId NOTIFY replacesIdChanged)
+    quint32 replacesId() const;
+    void setReplacesId(quint32 id);
+
+    Q_PROPERTY(QString appIcon READ appIcon WRITE setAppIcon NOTIFY appIconChanged)
+    QString appIcon() const;
+    void setAppIcon(const QString &appIcon);
 
     Q_PROPERTY(QString summary READ summary WRITE setSummary NOTIFY summaryChanged)
     QString summary() const;
@@ -60,6 +85,10 @@ public:
     Q_PROPERTY(QString body READ body WRITE setBody NOTIFY bodyChanged)
     QString body() const;
     void setBody(const QString &body);
+
+    Q_PROPERTY(qint32 expireTimeout READ expireTimeout WRITE setExpireTimeout NOTIFY expireTimeoutChanged)
+    qint32 expireTimeout() const;
+    void setExpireTimeout(qint32 milliseconds);
 
     Q_PROPERTY(QDateTime timestamp READ timestamp WRITE setTimestamp NOTIFY timestampChanged)
     QDateTime timestamp() const;
@@ -108,19 +137,20 @@ public:
 
     Q_INVOKABLE void publish();
     Q_INVOKABLE void close();
-    Q_INVOKABLE static QList<QObject*> notifications();
 
-    explicit Notification(const Notification &notification);
-    friend QDBusArgument &operator<<(QDBusArgument &, const Notification &);
-    friend const QDBusArgument &operator>>(const QDBusArgument &, Notification &);
+    Q_INVOKABLE static QList<QObject*> notifications();
+    Q_INVOKABLE static QList<QObject*> notifications(const QString &appName);
 
 signals:
     void clicked();
     void closed(uint reason);
     void categoryChanged();
+    void appNameChanged();
     void replacesIdChanged();
+    void appIconChanged();
     void summaryChanged();
     void bodyChanged();
+    void expireTimeoutChanged();
     void timestampChanged();
     void previewSummaryChanged();
     void previewBodyChanged();
@@ -131,26 +161,20 @@ signals:
 private slots:
     void checkActionInvoked(uint id, QString actionKey);
     void checkNotificationClosed(uint id, uint reason);
-    void setRemoteActionHint();
 
 private:
-    static QString appName();
+    NotificationPrivate * const d_ptr;
+    Q_DECLARE_PRIVATE(Notification)
 
-    uint replacesId_;
-    QString summary_;
-    QString body_;
-    QHash<QString, QString> actions_;
-    QVariantHash hints_;
-    QVariantList remoteActions_;
-    QString remoteDBusCallServiceName_;
-    QString remoteDBusCallObjectPath_;
-    QString remoteDBusCallInterface_;
-    QString remoteDBusCallMethodName_;
-    QVariantList remoteDBusCallArguments_;
+    Notification(const NotificationData &data, QObject *parent = 0);
+
+    static Notification *createNotification(const NotificationData &data, QObject *parent = 0);
 };
 
-Q_DECLARE_METATYPE(Notification)
-Q_DECLARE_METATYPE(QList<Notification>)
-Q_DECLARE_METATYPE(QList<Notification*>)
+QDBusArgument &operator<<(QDBusArgument &, const NotificationData &);
+const QDBusArgument &operator>>(const QDBusArgument &, NotificationData &);
+
+Q_DECLARE_METATYPE(NotificationData)
+Q_DECLARE_METATYPE(QList<NotificationData>)
 
 #endif // NOTIFICATION_H

@@ -54,7 +54,7 @@ BuildRequires: qt5-plugin-sqldriver-sqlite
 # >> build pre
 # << build pre
 
-%qmake5 
+%qmake5 VERSION=%{version}
 
 make %{?jobs:-j%jobs}
 make docs

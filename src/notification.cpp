@@ -45,14 +45,18 @@ const char *HINT_REMOTE_ACTION_PREFIX = "x-nemo-remote-action-";
 const char *HINT_REMOTE_ACTION_ICON_PREFIX = "x-nemo-remote-action-icon-";
 const char *DEFAULT_ACTION_NAME = "default";
 
+static inline QString processName() {
+    return QFileInfo(QCoreApplication::arguments()[0]).fileName();
+}
+
 //! A proxy for accessing the notification manager
 Q_GLOBAL_STATIC_WITH_ARGS(NotificationManagerProxy, notificationManagerProxyInstance, ("org.freedesktop.Notifications", "/org/freedesktop/Notifications", QDBusConnection::sessionBus()))
 
 NotificationManagerProxy *notificationManager()
 {
     if (!notificationManagerProxyInstance.exists()) {
-        qDBusRegisterMetaType<Notification>();
-        qDBusRegisterMetaType<QList<Notification> >();
+        qDBusRegisterMetaType<NotificationData>();
+        qDBusRegisterMetaType<QList<NotificationData> >();
     }
 
     return notificationManagerProxyInstance();
@@ -203,6 +207,49 @@ QVariantList decodeActionHints(const QHash<QString, QString> &actions, const QVa
 
 }
 
+NotificationData::NotificationData()
+    : replacesId(0)
+    , expireTimeout(-1)
+{
+}
+
+class NotificationPrivate : public NotificationData
+{
+    friend class Notification;
+
+    NotificationPrivate()
+        : NotificationData()
+    {
+    }
+
+    NotificationPrivate(const NotificationData &data)
+        : NotificationData(data)
+        , remoteActions(decodeActionHints(actions, hints))
+    {
+    }
+
+    QVariantMap firstRemoteAction() const
+    {
+        QVariantMap vm;
+        const QVariant firstAction(remoteActions.value(0));
+        if (!firstAction.isNull()) {
+            vm = firstAction.value<QVariantMap>();
+        }
+        return vm;
+    }
+
+    void setFirstRemoteAction(const QVariantMap &vm)
+    {
+        if (remoteActions.isEmpty()) {
+            remoteActions.append(vm);
+        } else {
+            remoteActions[0] = vm;
+        }
+    }
+
+    QVariantList remoteActions;
+};
+
 /*!
     \qmltype Notification
     \brief Allows notifications to be published
@@ -228,6 +275,8 @@ QVariantList decodeActionHints(const QHash<QString, QString> &actions, const QVa
         Notification {
             id: notification
             category: "x-nemo.example"
+            appName: "Example App"
+            appIcon: "/usr/share/example-app/icon-l-application"
             summary: "Notification summary"
             body: "Notification body"
             previewSummary: "Notification preview summary"
@@ -281,11 +330,23 @@ QVariantList decodeActionHints(const QHash<QString, QString> &actions, const QVa
  */
 Notification::Notification(QObject *parent) :
     QObject(parent),
-    replacesId_(0)
+    d_ptr(new NotificationPrivate)
 {
     connect(notificationManager(), SIGNAL(ActionInvoked(uint,QString)), this, SLOT(checkActionInvoked(uint,QString)));
     connect(notificationManager(), SIGNAL(NotificationClosed(uint,uint)), this, SLOT(checkNotificationClosed(uint,uint)));
-    connect(this, SIGNAL(remoteDBusCallChanged()), this, SLOT(setRemoteActionHint()));
+}
+
+Notification::Notification(const NotificationData &data, QObject *parent) :
+    QObject(parent),
+    d_ptr(new NotificationPrivate(data))
+{
+    connect(notificationManager(), SIGNAL(ActionInvoked(uint,QString)), this, SLOT(checkActionInvoked(uint,QString)));
+    connect(notificationManager(), SIGNAL(NotificationClosed(uint,uint)), this, SLOT(checkNotificationClosed(uint,uint)));
+}
+
+Notification::~Notification()
+{
+    delete d_ptr;
 }
 
 /*!
@@ -295,14 +356,39 @@ Notification::Notification(QObject *parent) :
  */
 QString Notification::category() const
 {
-    return hints_.value(HINT_CATEGORY).toString();
+    Q_D(const Notification);
+    return d->hints.value(HINT_CATEGORY).toString();
 }
 
 void Notification::setCategory(const QString &category)
 {
+    Q_D(Notification);
     if (category != this->category()) {
-        hints_.insert(HINT_CATEGORY, category);
+        d->hints.insert(HINT_CATEGORY, category);
         emit categoryChanged();
+    }
+}
+
+/*!
+    \qmlproperty QString Notification::appName
+
+    The application name associated with this notification, for display purposes.
+
+    The application name should be the formal name, localized if appropriate.
+    If not set, the name of the current process is returned.
+ */
+QString Notification::appName() const
+{
+    Q_D(const Notification);
+    return !d->appName.isEmpty() ? d->appName : processName();
+}
+
+void Notification::setAppName(const QString &appName)
+{
+    Q_D(Notification);
+    if (appName != this->appName()) {
+        d->appName = appName;
+        emit appNameChanged();
     }
 }
 
@@ -313,14 +399,36 @@ void Notification::setCategory(const QString &category)
  */
 uint Notification::replacesId() const
 {
-    return replacesId_;
+    Q_D(const Notification);
+    return d->replacesId;
 }
 
 void Notification::setReplacesId(uint id)
 {
-    if (replacesId_ != id) {
-        replacesId_ = id;
+    Q_D(Notification);
+    if (d->replacesId != id) {
+        d->replacesId = id;
         emit replacesIdChanged();
+    }
+}
+
+/*!
+    \qmlproperty QString Notification::appIcon
+
+    The icon associated with this notification's application. Defaults to empty.
+ */
+QString Notification::appIcon() const
+{
+    Q_D(const Notification);
+    return d->appIcon;
+}
+
+void Notification::setAppIcon(const QString &appIcon)
+{
+    Q_D(Notification);
+    if (appIcon != this->appIcon()) {
+        d->appIcon = appIcon;
+        emit appIconChanged();
     }
 }
 
@@ -331,13 +439,15 @@ void Notification::setReplacesId(uint id)
  */
 QString Notification::summary() const
 {
-    return summary_;
+    Q_D(const Notification);
+    return d->summary;
 }
 
 void Notification::setSummary(const QString &summary)
 {
-    if (summary_ != summary) {
-        summary_ = summary;
+    Q_D(Notification);
+    if (d->summary != summary) {
+        d->summary = summary;
         emit summaryChanged();
     }
 }
@@ -349,14 +459,39 @@ void Notification::setSummary(const QString &summary)
  */
 QString Notification::body() const
 {
-    return body_;
+    Q_D(const Notification);
+    return d->body;
 }
 
 void Notification::setBody(const QString &body)
 {
-    if (body_ != body) {
-        body_ = body;
+    Q_D(Notification);
+    if (d->body != body) {
+        d->body = body;
         emit bodyChanged();
+    }
+}
+
+/*!
+    \qmlproperty int32 Notification::expireTimeout
+
+    The number of milliseconds after display at which the notification should be automatically closed.
+    ExpireTimeout of zero indicates that the notification should not close automatically.
+
+    Defaults to -1, indicating that the notification manager should decide the expiration timeout.
+ */
+qint32 Notification::expireTimeout() const
+{
+    Q_D(const Notification);
+    return d->expireTimeout;
+}
+
+void Notification::setExpireTimeout(qint32 milliseconds)
+{
+    Q_D(Notification);
+    if (milliseconds != d->expireTimeout) {
+        d->expireTimeout = milliseconds;
+        emit expireTimeoutChanged();
     }
 }
 
@@ -367,13 +502,15 @@ void Notification::setBody(const QString &body)
  */
 QDateTime Notification::timestamp() const
 {
-    return hints_.value(HINT_TIMESTAMP).toDateTime();
+    Q_D(const Notification);
+    return d->hints.value(HINT_TIMESTAMP).toDateTime();
 }
 
 void Notification::setTimestamp(const QDateTime &timestamp)
 {
+    Q_D(Notification);
     if (timestamp != this->timestamp()) {
-        hints_.insert(HINT_TIMESTAMP, timestamp.toString(Qt::ISODate));
+        d->hints.insert(HINT_TIMESTAMP, timestamp.toString(Qt::ISODate));
         emit timestampChanged();
     }
 }
@@ -385,13 +522,15 @@ void Notification::setTimestamp(const QDateTime &timestamp)
  */
 QString Notification::previewSummary() const
 {
-    return hints_.value(HINT_PREVIEW_SUMMARY).toString();
+    Q_D(const Notification);
+    return d->hints.value(HINT_PREVIEW_SUMMARY).toString();
 }
 
 void Notification::setPreviewSummary(const QString &previewSummary)
 {
+    Q_D(Notification);
     if (previewSummary != this->previewSummary()) {
-        hints_.insert(HINT_PREVIEW_SUMMARY, previewSummary);
+        d->hints.insert(HINT_PREVIEW_SUMMARY, previewSummary);
         emit previewSummaryChanged();
     }
 }
@@ -403,13 +542,15 @@ void Notification::setPreviewSummary(const QString &previewSummary)
  */
 QString Notification::previewBody() const
 {
-    return hints_.value(HINT_PREVIEW_BODY).toString();
+    Q_D(const Notification);
+    return d->hints.value(HINT_PREVIEW_BODY).toString();
 }
 
 void Notification::setPreviewBody(const QString &previewBody)
 {
+    Q_D(Notification);
     if (previewBody != this->previewBody()) {
-        hints_.insert(HINT_PREVIEW_BODY, previewBody);
+        d->hints.insert(HINT_PREVIEW_BODY, previewBody);
         emit previewBodyChanged();
     }
 }
@@ -421,13 +562,15 @@ void Notification::setPreviewBody(const QString &previewBody)
  */
 int Notification::itemCount() const
 {
-    return hints_.value(HINT_ITEM_COUNT).toInt();
+    Q_D(const Notification);
+    return d->hints.value(HINT_ITEM_COUNT).toInt();
 }
 
 void Notification::setItemCount(int itemCount)
 {
+    Q_D(Notification);
     if (itemCount != this->itemCount()) {
-        hints_.insert(HINT_ITEM_COUNT, itemCount);
+        d->hints.insert(HINT_ITEM_COUNT, itemCount);
         emit itemCountChanged();
     }
 }
@@ -441,7 +584,9 @@ void Notification::setItemCount(int itemCount)
 */
 void Notification::publish()
 {
-    setReplacesId(notificationManager()->Notify(appName(), replacesId_, QString(), summary_, body_, encodeActions(actions_), hints_, -1));
+    Q_D(Notification);
+    setReplacesId(notificationManager()->Notify(appName(), d->replacesId, d->appIcon, d->summary, d->body,
+                                                encodeActions(d->actions), d->hints, d->expireTimeout));
 }
 
 /*!
@@ -451,8 +596,9 @@ void Notification::publish()
 */
 void Notification::close()
 {
-    if (replacesId_ != 0) {
-        notificationManager()->CloseNotification(replacesId_);
+    Q_D(Notification);
+    if (d->replacesId != 0) {
+        notificationManager()->CloseNotification(d->replacesId);
         setReplacesId(0);
     }
 }
@@ -464,7 +610,8 @@ void Notification::close()
 */
 void Notification::checkActionInvoked(uint id, QString actionKey)
 {
-    if (id == replacesId_) {
+    Q_D(Notification);
+    if (id == d->replacesId) {
         if (actionKey == DEFAULT_ACTION_NAME) {
             emit clicked();
         }
@@ -481,7 +628,8 @@ void Notification::checkActionInvoked(uint id, QString actionKey)
 */
 void Notification::checkNotificationClosed(uint id, uint reason)
 {
-    if (id == replacesId_) {
+    Q_D(Notification);
+    if (id == d->replacesId) {
         emit closed(reason);
         setReplacesId(0);
     }
@@ -494,13 +642,20 @@ void Notification::checkNotificationClosed(uint id, uint reason)
  */
 QString Notification::remoteDBusCallServiceName() const
 {
-    return remoteDBusCallServiceName_;
+    Q_D(const Notification);
+    QVariantMap vm(d->firstRemoteAction());
+    return vm["name"].value<QString>();
 }
 
 void Notification::setRemoteDBusCallServiceName(const QString &serviceName)
 {
-    if (remoteDBusCallServiceName_ != serviceName) {
-        remoteDBusCallServiceName_ = serviceName;
+    Q_D(Notification);
+    QVariantMap vm(d->firstRemoteAction());
+    if (vm["name"].value<QString>() != serviceName) {
+        vm.insert("name", serviceName);
+        d->setFirstRemoteAction(vm);
+
+        emit remoteActionsChanged();
         emit remoteDBusCallChanged();
     }
 }
@@ -512,13 +667,20 @@ void Notification::setRemoteDBusCallServiceName(const QString &serviceName)
  */
 QString Notification::remoteDBusCallObjectPath() const
 {
-    return remoteDBusCallObjectPath_;
+    Q_D(const Notification);
+    QVariantMap vm(d->firstRemoteAction());
+    return vm["path"].value<QString>();
 }
 
 void Notification::setRemoteDBusCallObjectPath(const QString &objectPath)
 {
-    if (remoteDBusCallObjectPath_ != objectPath) {
-        remoteDBusCallObjectPath_ = objectPath;
+    Q_D(Notification);
+    QVariantMap vm(d->firstRemoteAction());
+    if (vm["path"].value<QString>() != objectPath) {
+        vm.insert("path", objectPath);
+        d->setFirstRemoteAction(vm);
+
+        emit remoteActionsChanged();
         emit remoteDBusCallChanged();
     }
 }
@@ -530,13 +692,20 @@ void Notification::setRemoteDBusCallObjectPath(const QString &objectPath)
  */
 QString Notification::remoteDBusCallInterface() const
 {
-    return remoteDBusCallInterface_;
+    Q_D(const Notification);
+    QVariantMap vm(d->firstRemoteAction());
+    return vm["iface"].value<QString>();
 }
 
 void Notification::setRemoteDBusCallInterface(const QString &interface)
 {
-    if (remoteDBusCallInterface_ != interface) {
-        remoteDBusCallInterface_ = interface;
+    Q_D(Notification);
+    QVariantMap vm(d->firstRemoteAction());
+    if (vm["iface"].value<QString>() != interface) {
+        vm.insert("iface", interface);
+        d->setFirstRemoteAction(vm);
+
+        emit remoteActionsChanged();
         emit remoteDBusCallChanged();
     }
 }
@@ -548,13 +717,20 @@ void Notification::setRemoteDBusCallInterface(const QString &interface)
  */
 QString Notification::remoteDBusCallMethodName() const
 {
-    return remoteDBusCallMethodName_;
+    Q_D(const Notification);
+    QVariantMap vm(d->firstRemoteAction());
+    return vm["method"].value<QString>();
 }
 
 void Notification::setRemoteDBusCallMethodName(const QString &methodName)
 {
-    if (remoteDBusCallMethodName_ != methodName) {
-        remoteDBusCallMethodName_ = methodName;
+    Q_D(Notification);
+    QVariantMap vm(d->firstRemoteAction());
+    if (vm["method"].value<QString>() != methodName) {
+        vm.insert("method", methodName);
+        d->setFirstRemoteAction(vm);
+
+        emit remoteActionsChanged();
         emit remoteDBusCallChanged();
     }
 }
@@ -566,31 +742,22 @@ void Notification::setRemoteDBusCallMethodName(const QString &methodName)
  */
 QVariantList Notification::remoteDBusCallArguments() const
 {
-    return remoteDBusCallArguments_;
+    Q_D(const Notification);
+    QVariantMap vm(d->firstRemoteAction());
+    return vm["arguments"].value<QVariantList>();
 }
 
 void Notification::setRemoteDBusCallArguments(const QVariantList &arguments)
 {
-    if (remoteDBusCallArguments_ != arguments) {
-        remoteDBusCallArguments_ = arguments;
+    Q_D(Notification);
+    QVariantMap vm(d->firstRemoteAction());
+    if (vm["arguments"].value<QVariantList>() != arguments) {
+        vm.insert("arguments", arguments);
+        d->setFirstRemoteAction(vm);
+
+        emit remoteActionsChanged();
         emit remoteDBusCallChanged();
     }
-}
-
-void Notification::setRemoteActionHint()
-{
-    QString s;
-
-    if (!remoteDBusCallServiceName_.isEmpty() && !remoteDBusCallObjectPath_.isEmpty() && !remoteDBusCallInterface_.isEmpty() && !remoteDBusCallMethodName_.isEmpty()) {
-        s = encodeDBusCall(remoteDBusCallServiceName_,
-                           remoteDBusCallObjectPath_,
-                           remoteDBusCallInterface_,
-                           remoteDBusCallMethodName_,
-                           remoteDBusCallArguments_);
-    }
-
-    hints_.insert(QString(HINT_REMOTE_ACTION_PREFIX) + DEFAULT_ACTION_NAME, s);
-    actions_.insert(DEFAULT_ACTION_NAME, QString());
 }
 
 /*!
@@ -600,38 +767,41 @@ void Notification::setRemoteActionHint()
  */
 QVariantList Notification::remoteActions() const
 {
-    return remoteActions_;
+    Q_D(const Notification);
+    return d->remoteActions;
 }
 
 void Notification::setRemoteActions(const QVariantList &remoteActions)
 {
-    if (remoteActions != remoteActions_) {
+    Q_D(Notification);
+    if (remoteActions != d->remoteActions) {
         // Remove any existing actions
-        foreach (const QVariant &action, remoteActions_) {
+        foreach (const QVariant &action, d->remoteActions) {
             QVariantMap vm = action.value<QVariantMap>();
             const QString actionName = vm["name"].value<QString>();
             if (!actionName.isEmpty()) {
-                hints_.remove(QString(HINT_REMOTE_ACTION_PREFIX) + actionName);
-                actions_.remove(actionName);
+                d->hints.remove(QString(HINT_REMOTE_ACTION_PREFIX) + actionName);
+                d->actions.remove(actionName);
             }
         }
 
         // Add the new actions and their associated hints
-        remoteActions_ = remoteActions;
+        d->remoteActions = remoteActions;
 
         QPair<QHash<QString, QString>, QVariantHash> actionHints = encodeActionHints(remoteActions);
 
         QHash<QString, QString>::const_iterator ait = actionHints.first.constBegin(), aend = actionHints.first.constEnd();
         for ( ; ait != aend; ++ait) {
-            actions_.insert(ait.key(), ait.value());
+            d->actions.insert(ait.key(), ait.value());
         }
 
         QVariantHash::const_iterator hit = actionHints.second.constBegin(), hend = actionHints.second.constEnd();
         for ( ; hit != hend; ++hit) {
-            hints_.insert(hit.key(), hit.value());
+            d->hints.insert(hit.key(), hit.value());
         }
 
         emit remoteActionsChanged();
+        emit remoteDBusCallChanged();
     }
 }
 
@@ -642,7 +812,8 @@ void Notification::setRemoteActions(const QVariantList &remoteActions)
 */
 QVariant Notification::hintValue(const QString &hint) const
 {
-    return hints_.value(hint);
+    Q_D(const Notification);
+    return d->hints.value(hint);
 }
 
 /*!
@@ -652,79 +823,78 @@ QVariant Notification::hintValue(const QString &hint) const
 */
 void Notification::setHintValue(const QString &hint, const QVariant &value)
 {
-    hints_.insert(hint, value);
+    Q_D(Notification);
+    d->hints.insert(hint, value);
 }
 
 /*!
     \qmlmethod void Notification::notifications()
 
     Returns a list of notifications created by the calling application.
+    The returned objects are Notification components. They are only destroyed
+    when the application is closed, so the caller should take their ownership
+    and destroy them when they are not used anymore.
 */
 QList<QObject*> Notification::notifications()
 {
-    QList<Notification> notifications = notificationManager()->GetNotifications(appName());
+    return notifications(processName());
+}
+
+/*!
+    \qmlmethod void Notification::notifications(const QString &appName)
+
+    Returns a list of notifications matching the supplied \a appName.
+    The returned objects are Notification components. They are only destroyed
+    when the application is closed, so the caller should take their ownership
+    and destroy them when they are not used anymore.
+*/
+QList<QObject*> Notification::notifications(const QString &appName)
+{
+    QList<NotificationData> notifications = notificationManager()->GetNotifications(appName);
     QList<QObject*> objects;
-    foreach (const Notification &notification, notifications) {
-        objects.append(new Notification(notification));
+    foreach (const NotificationData &notification, notifications) {
+        objects.append(createNotification(notification, notificationManager()));
     }
     return objects;
 }
 
-QString Notification::appName()
+Notification *Notification::createNotification(const NotificationData &data, QObject *parent)
 {
-    return QFileInfo(QCoreApplication::arguments()[0]).fileName();
+    return new Notification(data, parent);
 }
 
-Notification::Notification(const Notification &notification) :
-    QObject(notification.parent()),
-    replacesId_(notification.replacesId_),
-    summary_(notification.summary_),
-    body_(notification.body_),
-    actions_(notification.actions_),
-    hints_(notification.hints_),
-    remoteActions_(notification.remoteActions_),
-    remoteDBusCallServiceName_(notification.remoteDBusCallServiceName_),
-    remoteDBusCallObjectPath_(notification.remoteDBusCallObjectPath_),
-    remoteDBusCallInterface_(notification.remoteDBusCallInterface_),
-    remoteDBusCallMethodName_(notification.remoteDBusCallMethodName_),
-    remoteDBusCallArguments_(notification.remoteDBusCallArguments_)
-{
-}
-
-QDBusArgument &operator<<(QDBusArgument &argument, const Notification &notification)
+QDBusArgument &operator<<(QDBusArgument &argument, const NotificationData &data)
 {
     argument.beginStructure();
-    argument << Notification::appName();
-    argument << notification.replacesId_;
-    argument << QString();
-    argument << notification.summary_;
-    argument << notification.body_;
-    argument << encodeActions(notification.actions_);
-    argument << notification.hints_;
-    argument << -1;
+    argument << (!data.appName.isEmpty() ? data.appName : processName());
+    argument << data.replacesId;
+    argument << data.appIcon;
+    argument << data.summary;
+    argument << data.body;
+    argument << encodeActions(data.actions);
+    argument << data.hints;
+    argument << data.expireTimeout;
     argument.endStructure();
     return argument;
 }
 
-const QDBusArgument &operator>>(const QDBusArgument &argument, Notification &notification)
+const QDBusArgument &operator>>(const QDBusArgument &argument, NotificationData &data)
 {
-    QString tempString;
     QStringList tempStringList;
-    int tempInt;
 
     argument.beginStructure();
-    argument >> tempString;
-    argument >> notification.replacesId_;
-    argument >> tempString;
-    argument >> notification.summary_;
-    argument >> notification.body_;
+    argument >> data.appName;
+    argument >> data.replacesId;
+    argument >> data.appIcon;
+    argument >> data.summary;
+    argument >> data.body;
     argument >> tempStringList;
-    argument >> notification.hints_;
-    argument >> tempInt;
+    argument >> data.hints;
+    argument >> data.expireTimeout;
     argument.endStructure();
 
-    notification.actions_ = decodeActions(tempStringList);
-    notification.remoteActions_ = decodeActionHints(notification.actions_, notification.hints_);
+    data.actions = decodeActions(tempStringList);
 
     return argument;
 }
+
