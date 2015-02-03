@@ -47,15 +47,10 @@ struct NotificationData
     QString body;
     QHash<QString, QString> actions;
     QVariantHash hints;
-    QVariantList remoteActions;
-    QString remoteDBusCallServiceName;
-    QString remoteDBusCallObjectPath;
-    QString remoteDBusCallInterface;
-    QString remoteDBusCallMethodName;
-    QVariantList remoteDBusCallArguments;
 };
 
 class NotificationManagerProxy;
+class NotificationPrivate;
 class Q_DECL_EXPORT Notification : public QObject
 {
     Q_OBJECT
@@ -146,7 +141,7 @@ signals:
     void remoteDBusCallChanged();
 
 protected:
-    QScopedPointer<NotificationData> data;
+    QScopedPointer<NotificationPrivate> data;
 
 private slots:
     void checkActionInvoked(uint id, QString actionKey);

@@ -212,6 +212,35 @@ NotificationData::NotificationData()
 {
 }
 
+class NotificationPrivate : public NotificationData
+{
+    friend class Notification;
+
+    NotificationPrivate()
+        : NotificationData()
+    {
+    }
+
+    NotificationPrivate(const NotificationData &data)
+        : NotificationData(data)
+        , remoteActions(decodeActionHints(actions, hints))
+    {
+    }
+
+    NotificationPrivate &operator=(const NotificationData &data)
+    {
+        *this = NotificationPrivate(data);
+        return *this;
+    }
+
+    QVariantList remoteActions;
+    QString remoteDBusCallServiceName;
+    QString remoteDBusCallObjectPath;
+    QString remoteDBusCallInterface;
+    QString remoteDBusCallMethodName;
+    QVariantList remoteDBusCallArguments;
+};
+
 /*!
     \qmltype Notification
     \brief Allows notifications to be published
@@ -290,7 +319,7 @@ NotificationData::NotificationData()
  */
 Notification::Notification(QObject *parent) :
     QObject(parent),
-    data(new NotificationData)
+    data(new NotificationPrivate)
 {
     connect(notificationManager(), SIGNAL(ActionInvoked(uint,QString)), this, SLOT(checkActionInvoked(uint,QString)));
     connect(notificationManager(), SIGNAL(NotificationClosed(uint,uint)), this, SLOT(checkNotificationClosed(uint,uint)));
@@ -730,7 +759,7 @@ const QDBusArgument &operator>>(const QDBusArgument &argument, NotificationData 
     argument.endStructure();
 
     data.actions = decodeActions(tempStringList);
-    data.remoteActions = decodeActionHints(data.actions, data.hints);
 
     return argument;
 }
+
