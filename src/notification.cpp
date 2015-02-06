@@ -109,11 +109,14 @@ QHash<QString, QString> decodeActions(const QStringList &actions)
     QHash<QString, QString> rv;
 
     QStringList::const_iterator it = actions.constBegin(), end = actions.constEnd();
-    for ( ; it != end; ++it) {
+    while (it != end) {
         // If we have an odd number of tokens, add an empty displayName to complete the last pair
         const QString &name(*it);
-        ++it;
-        const QString &displayName(it != end ? *it : QString());
+        QString displayName;
+        if (++it != end) {
+            displayName = *it;
+            ++it;
+        }
         rv.insert(name, displayName);
     }
 
