@@ -132,6 +132,10 @@ public:
     void setRemoteActions(const QVariantList &remoteActions);
     inline void setRemoteAction(const QVariant &remoteAction) { setRemoteActions(QVariantList() << remoteAction); }
 
+    Q_PROPERTY(QString origin READ origin WRITE setOrigin NOTIFY originChanged)
+    QString origin() const;
+    void setOrigin(const QString &origin);
+
     QVariant hintValue(const QString &hint) const;
     void setHintValue(const QString &hint, const QVariant &value);
 
@@ -157,6 +161,7 @@ signals:
     void itemCountChanged();
     void remoteActionsChanged();
     void remoteDBusCallChanged();
+    void originChanged();
 
 private slots:
     void checkActionInvoked(uint id, QString actionKey);

@@ -43,6 +43,7 @@ const char *HINT_PREVIEW_BODY = "x-nemo-preview-body";
 const char *HINT_PREVIEW_SUMMARY = "x-nemo-preview-summary";
 const char *HINT_REMOTE_ACTION_PREFIX = "x-nemo-remote-action-";
 const char *HINT_REMOTE_ACTION_ICON_PREFIX = "x-nemo-remote-action-icon-";
+const char *HINT_ORIGIN = "x-nemo-origin";
 const char *DEFAULT_ACTION_NAME = "default";
 
 static inline QString processName() {
@@ -805,6 +806,27 @@ void Notification::setRemoteActions(const QVariantList &remoteActions)
 
         emit remoteActionsChanged();
         emit remoteDBusCallChanged();
+    }
+}
+
+/*!
+    \qmlproperty QString Notification::origin
+
+    A property indicating the origin of the notification.
+    For example, the email address from which a mail was received that caused the notification to be created.
+*/
+QString Notification::origin() const
+{
+    Q_D(const Notification);
+    return d->hints.value(HINT_ORIGIN).toString();
+}
+
+void Notification::setOrigin(const QString &origin)
+{
+    Q_D(Notification);
+    if (origin != this->origin()) {
+        d->hints.insert(HINT_ORIGIN, origin);
+        emit originChanged();
     }
 }
 
