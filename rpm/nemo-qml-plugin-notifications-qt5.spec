@@ -9,7 +9,7 @@ Name:       nemo-qml-plugin-notifications-qt5
 # << macros
 
 Summary:    Notifications plugin for Nemo Mobile
-Version:    1.0.2
+Version:    1.0.3
 Release:    1
 Group:      System/Libraries
 License:    BSD
