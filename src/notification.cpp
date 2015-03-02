@@ -242,13 +242,13 @@ class NotificationPrivate : public NotificationData
         return vm;
     }
 
-    void setFirstRemoteAction(const QVariantMap &vm)
+    void setFirstRemoteAction(QVariantMap vm, Notification *q)
     {
-        if (remoteActions.isEmpty()) {
-            remoteActions.append(vm);
-        } else {
-            remoteActions[0] = vm;
+        QString name(vm["name"].value<QString>());
+        if (name.isEmpty()) {
+            vm.insert("name", QString::fromLatin1(DEFAULT_ACTION_NAME));
         }
+        q->setRemoteActions(QVariantList() << vm);
     }
 
     QVariantList remoteActions;
@@ -589,6 +589,7 @@ void Notification::setItemCount(int itemCount)
 void Notification::publish()
 {
     Q_D(Notification);
+
     setReplacesId(notificationManager()->Notify(appName(), d->replacesId, d->appIcon, d->summary, d->body,
                                                 encodeActions(d->actions), d->hints, d->expireTimeout));
 }
@@ -648,16 +649,16 @@ QString Notification::remoteDBusCallServiceName() const
 {
     Q_D(const Notification);
     QVariantMap vm(d->firstRemoteAction());
-    return vm["name"].value<QString>();
+    return vm["service"].value<QString>();
 }
 
 void Notification::setRemoteDBusCallServiceName(const QString &serviceName)
 {
     Q_D(Notification);
     QVariantMap vm(d->firstRemoteAction());
-    if (vm["name"].value<QString>() != serviceName) {
-        vm.insert("name", serviceName);
-        d->setFirstRemoteAction(vm);
+    if (vm["service"].value<QString>() != serviceName) {
+        vm.insert("service", serviceName);
+        d->setFirstRemoteAction(vm, this);
 
         emit remoteActionsChanged();
         emit remoteDBusCallChanged();
@@ -682,7 +683,7 @@ void Notification::setRemoteDBusCallObjectPath(const QString &objectPath)
     QVariantMap vm(d->firstRemoteAction());
     if (vm["path"].value<QString>() != objectPath) {
         vm.insert("path", objectPath);
-        d->setFirstRemoteAction(vm);
+        d->setFirstRemoteAction(vm, this);
 
         emit remoteActionsChanged();
         emit remoteDBusCallChanged();
@@ -707,7 +708,7 @@ void Notification::setRemoteDBusCallInterface(const QString &interface)
     QVariantMap vm(d->firstRemoteAction());
     if (vm["iface"].value<QString>() != interface) {
         vm.insert("iface", interface);
-        d->setFirstRemoteAction(vm);
+        d->setFirstRemoteAction(vm, this);
 
         emit remoteActionsChanged();
         emit remoteDBusCallChanged();
@@ -732,7 +733,7 @@ void Notification::setRemoteDBusCallMethodName(const QString &methodName)
     QVariantMap vm(d->firstRemoteAction());
     if (vm["method"].value<QString>() != methodName) {
         vm.insert("method", methodName);
-        d->setFirstRemoteAction(vm);
+        d->setFirstRemoteAction(vm, this);
 
         emit remoteActionsChanged();
         emit remoteDBusCallChanged();
@@ -757,7 +758,7 @@ void Notification::setRemoteDBusCallArguments(const QVariantList &arguments)
     QVariantMap vm(d->firstRemoteAction());
     if (vm["arguments"].value<QVariantList>() != arguments) {
         vm.insert("arguments", arguments);
-        d->setFirstRemoteAction(vm);
+        d->setFirstRemoteAction(vm, this);
 
         emit remoteActionsChanged();
         emit remoteDBusCallChanged();
