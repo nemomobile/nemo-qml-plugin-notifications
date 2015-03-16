@@ -885,6 +885,37 @@ QList<QObject*> Notification::notifications(const QString &appName)
     return objects;
 }
 
+QVariant Notification::remoteAction(const QString &name, const QString &displayName,
+                                    const QString &service, const QString &path, const QString &iface,
+                                    const QString &method, const QVariantList &arguments)
+{
+    QVariantMap action;
+
+    if (!name.isEmpty()) {
+        action.insert(QStringLiteral("name"), name);
+    }
+    if (!displayName.isEmpty()) {
+        action.insert(QStringLiteral("displayName"), displayName);
+    }
+    if (!service.isEmpty()) {
+        action.insert(QStringLiteral("service"), service);
+    }
+    if (!path.isEmpty()) {
+        action.insert(QStringLiteral("path"), path);
+    }
+    if (!iface.isEmpty()) {
+        action.insert(QStringLiteral("iface"), iface);
+    }
+    if (!method.isEmpty()) {
+        action.insert(QStringLiteral("method"), method);
+    }
+    if (!arguments.isEmpty()) {
+        action.insert(QStringLiteral("arguments"), arguments);
+    }
+
+    return action;
+}
+
 Notification *Notification::createNotification(const NotificationData &data, QObject *parent)
 {
     return new Notification(data, parent);

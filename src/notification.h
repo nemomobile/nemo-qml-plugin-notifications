@@ -145,6 +145,10 @@ public:
     Q_INVOKABLE static QList<QObject*> notifications();
     Q_INVOKABLE static QList<QObject*> notifications(const QString &appName);
 
+    Q_INVOKABLE static QVariant remoteAction(const QString &name, const QString &displayName,
+                                             const QString &service, const QString &path, const QString &iface,
+                                             const QString &method, const QVariantList &arguments = QVariantList());
+
 signals:
     void clicked();
     void closed(uint reason);
