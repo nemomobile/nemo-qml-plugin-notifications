@@ -47,7 +47,8 @@ const char *HINT_ORIGIN = "x-nemo-origin";
 const char *DEFAULT_ACTION_NAME = "default";
 
 static inline QString processName() {
-    return QFileInfo(QCoreApplication::arguments()[0]).fileName();
+    // Defaults to the filename if not set
+    return QCoreApplication::applicationName();
 }
 
 //! A proxy for accessing the notification manager
