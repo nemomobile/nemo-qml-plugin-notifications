@@ -57,8 +57,11 @@ class NotificationPrivate;
 class Q_DECL_EXPORT Notification : public QObject
 {
     Q_OBJECT
+    Q_ENUMS(Urgency)
 
 public:
+    enum Urgency { Low = 0, Normal = 1, Critical = 2 };
+
     explicit Notification(QObject *parent = 0);
     virtual ~Notification();
 
@@ -85,6 +88,10 @@ public:
     Q_PROPERTY(QString body READ body WRITE setBody NOTIFY bodyChanged)
     QString body() const;
     void setBody(const QString &body);
+
+    Q_PROPERTY(Urgency urgency READ urgency WRITE setUrgency NOTIFY urgencyChanged)
+    Urgency urgency() const;
+    void setUrgency(Urgency urgency);
 
     Q_PROPERTY(qint32 expireTimeout READ expireTimeout WRITE setExpireTimeout NOTIFY expireTimeoutChanged)
     qint32 expireTimeout() const;
@@ -158,6 +165,7 @@ signals:
     void appIconChanged();
     void summaryChanged();
     void bodyChanged();
+    void urgencyChanged();
     void expireTimeoutChanged();
     void timestampChanged();
     void previewSummaryChanged();

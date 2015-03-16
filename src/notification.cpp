@@ -37,6 +37,7 @@
 namespace {
 
 const char *HINT_CATEGORY = "category";
+const char *HINT_URGENCY = "urgency";
 const char *HINT_ITEM_COUNT = "x-nemo-item-count";
 const char *HINT_TIMESTAMP = "x-nemo-timestamp";
 const char *HINT_PREVIEW_BODY = "x-nemo-preview-body";
@@ -474,6 +475,29 @@ void Notification::setBody(const QString &body)
     if (d->body != body) {
         d->body = body;
         emit bodyChanged();
+    }
+}
+
+/*!
+    \qmlproperty enumeration Notification::urgency
+
+    The urgency level of the notification.
+
+    Defaults to Normal urgency.
+ */
+Notification::Urgency Notification::urgency() const
+{
+    Q_D(const Notification);
+    // Clipping to bounds in case an invalid value is stored as a hint
+    return static_cast<Urgency>(qMax(static_cast<int>(Low), qMin(static_cast<int>(Critical), d->hints.value(HINT_URGENCY).toInt())));
+}
+
+void Notification::setUrgency(Urgency urgency)
+{
+    Q_D(Notification);
+    if (urgency != this->urgency()) {
+        d->hints.insert(HINT_URGENCY, static_cast<int>(urgency));
+        emit urgencyChanged();
     }
 }
 
