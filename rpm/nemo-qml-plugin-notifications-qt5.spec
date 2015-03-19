@@ -15,7 +15,6 @@ Group:      System/Libraries
 License:    BSD
 URL:        https://github.com/nemomobile/nemo-qml-plugin-notifications
 Source0:    %{name}-%{version}.tar.bz2
-Source100:  nemo-qml-plugin-notifications-qt5.yaml
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 BuildRequires:  pkgconfig(Qt5Core)
