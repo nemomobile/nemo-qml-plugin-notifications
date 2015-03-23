@@ -45,6 +45,7 @@ const char *HINT_PREVIEW_SUMMARY = "x-nemo-preview-summary";
 const char *HINT_REMOTE_ACTION_PREFIX = "x-nemo-remote-action-";
 const char *HINT_REMOTE_ACTION_ICON_PREFIX = "x-nemo-remote-action-icon-";
 const char *HINT_ORIGIN = "x-nemo-origin";
+const char *HINT_OWNER = "x-nemo-owner";
 const char *DEFAULT_ACTION_NAME = "default";
 
 static inline QString processName() {
@@ -381,12 +382,11 @@ void Notification::setCategory(const QString &category)
     The application name associated with this notification, for display purposes.
 
     The application name should be the formal name, localized if appropriate.
-    If not set, the name of the current process is returned.
  */
 QString Notification::appName() const
 {
     Q_D(const Notification);
-    return !d->appName.isEmpty() ? d->appName : processName();
+    return d->appName;
 }
 
 void Notification::setAppName(const QString &appName)
@@ -614,6 +614,12 @@ void Notification::setItemCount(int itemCount)
 void Notification::publish()
 {
     Q_D(Notification);
+
+    // Ensure the ownership of this notification is recorded
+    QVariantHash::iterator it = d->hints.find(HINT_OWNER);
+    if (it == d->hints.end()) {
+        d->hints.insert(HINT_OWNER, processName());
+    }
 
     setReplacesId(notificationManager()->Notify(appName(), d->replacesId, d->appIcon, d->summary, d->body,
                                                 encodeActions(d->actions), d->hints, d->expireTimeout));
@@ -888,20 +894,21 @@ void Notification::setHintValue(const QString &hint, const QVariant &value)
 */
 QList<QObject*> Notification::notifications()
 {
+    // By default, only the notifications owned by us are returned
     return notifications(processName());
 }
 
 /*!
-    \qmlmethod void Notification::notifications(const QString &appName)
+    \qmlmethod void Notification::notifications(const QString &owner)
 
-    Returns a list of notifications matching the supplied \a appName.
+    Returns a list of notifications matching the supplied \a owner.
     The returned objects are Notification components. They are only destroyed
     when the application is closed, so the caller should take their ownership
     and destroy them when they are not used anymore.
 */
-QList<QObject*> Notification::notifications(const QString &appName)
+QList<QObject*> Notification::notifications(const QString &owner)
 {
-    QList<NotificationData> notifications = notificationManager()->GetNotifications(appName);
+    QList<NotificationData> notifications = notificationManager()->GetNotifications(owner);
     QList<QObject*> objects;
     foreach (const NotificationData &notification, notifications) {
         objects.append(createNotification(notification, notificationManager()));
@@ -948,7 +955,7 @@ Notification *Notification::createNotification(const NotificationData &data, QOb
 QDBusArgument &operator<<(QDBusArgument &argument, const NotificationData &data)
 {
     argument.beginStructure();
-    argument << (!data.appName.isEmpty() ? data.appName : processName());
+    argument << data.appName;
     argument << data.replacesId;
     argument << data.appIcon;
     argument << data.summary;
