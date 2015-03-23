@@ -150,7 +150,7 @@ public:
     Q_INVOKABLE void close();
 
     Q_INVOKABLE static QList<QObject*> notifications();
-    Q_INVOKABLE static QList<QObject*> notifications(const QString &appName);
+    Q_INVOKABLE static QList<QObject*> notifications(const QString &owner);
 
     Q_INVOKABLE static QVariant remoteAction(const QString &name, const QString &displayName,
                                              const QString &service, const QString &path, const QString &iface,
