@@ -1,0 +1,4 @@
+#!/bin/sh
+# Remove all existing notifications
+/usr/bin/notificationtool -o purge
+

@@ -20,6 +20,8 @@ Requires(postun): /sbin/ldconfig
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5Qml)
 BuildRequires:  pkgconfig(Qt5DBus)
+BuildRequires:  oneshot
+%{_oneshot_requires_post}
 
 %description
 %{summary}.
@@ -68,11 +70,14 @@ rm -rf %{buildroot}
 %qmake_install
 mkdir -p %{buildroot}/%{_docdir}/%{name}
 cp -R doc/html/* %{buildroot}/%{_docdir}/%{name}/
+chmod +x %{buildroot}/%{_oneshotdir}/*
 
 # >> install post
 # << install post
 
-%post -p /sbin/ldconfig
+%post
+/sbin/ldconfig
+%{_bindir}/add-oneshot --now remove-existing-notifications
 
 %postun -p /sbin/ldconfig
 
@@ -81,6 +86,7 @@ cp -R doc/html/* %{buildroot}/%{_docdir}/%{name}/
 %{_libdir}/libnemonotifications-qt5.so.*
 %{_libdir}/qt5/qml/org/nemomobile/notifications/libnemonotifications.so
 %{_libdir}/qt5/qml/org/nemomobile/notifications/qmldir
+%{_oneshotdir}/*
 # >> files
 # << files
 
