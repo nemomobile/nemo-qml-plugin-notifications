@@ -143,6 +143,10 @@ public:
     QString origin() const;
     void setOrigin(const QString &origin);
 
+    Q_PROPERTY(int maxContentLines READ maxContentLines WRITE setMaxContentLines NOTIFY maxContentLinesChanged)
+    int maxContentLines() const;
+    void setMaxContentLines(int max);
+
     QVariant hintValue(const QString &hint) const;
     void setHintValue(const QString &hint, const QVariant &value);
 
@@ -174,6 +178,7 @@ signals:
     void remoteActionsChanged();
     void remoteDBusCallChanged();
     void originChanged();
+    void maxContentLinesChanged();
 
 private slots:
     void checkActionInvoked(uint id, QString actionKey);
