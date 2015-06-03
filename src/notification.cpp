@@ -143,9 +143,7 @@ QPair<QHash<QString, QString>, QVariantHash> encodeActionHints(const QVariantLis
             const QVariantList arguments = vm["arguments"].value<QVariantList>();
             const QString icon = vm["icon"].value<QString>();
 
-            if (service.isEmpty() || path.isEmpty() || iface.isEmpty() || method.isEmpty()) {
-                qWarning() << "Unable to encode invalid remote action:" << action;
-            } else {
+            if (!service.isEmpty() && !path.isEmpty() && !iface.isEmpty() && !method.isEmpty()) {
                 rv.first.insert(actionName, displayName);
                 rv.second.insert(QString(HINT_REMOTE_ACTION_PREFIX) + actionName, encodeDBusCall(service, path, iface, method, arguments));
                 if (!icon.isEmpty()) {
@@ -614,6 +612,18 @@ void Notification::setItemCount(int itemCount)
 void Notification::publish()
 {
     Q_D(Notification);
+
+    // Validate the actions associated with the notification
+    Q_FOREACH (const QVariant &action, d->remoteActions) {
+        const QVariantMap &vm = action.value<QVariantMap>();
+        if (vm["name"].value<QString>().isEmpty()
+                || vm["service"].value<QString>().isEmpty()
+                || vm["path"].value<QString>().isEmpty()
+                || vm["iface"].value<QString>().isEmpty()
+                || vm["method"].value<QString>().isEmpty()) {
+            qWarning() << "Invalid remote action specification:" << action;
+        }
+    }
 
     // Ensure the ownership of this notification is recorded
     QVariantHash::iterator it = d->hints.find(HINT_OWNER);
