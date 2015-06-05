@@ -46,6 +46,7 @@ const char *HINT_REMOTE_ACTION_PREFIX = "x-nemo-remote-action-";
 const char *HINT_REMOTE_ACTION_ICON_PREFIX = "x-nemo-remote-action-icon-";
 const char *HINT_ORIGIN = "x-nemo-origin";
 const char *HINT_OWNER = "x-nemo-owner";
+const char *HINT_MAX_CONTENT_LINES = "x-nemo-max-content-lines";
 const char *DEFAULT_ACTION_NAME = "default";
 
 static inline QString processName() {
@@ -869,6 +870,26 @@ void Notification::setOrigin(const QString &origin)
     if (origin != this->origin()) {
         d->hints.insert(HINT_ORIGIN, origin);
         emit originChanged();
+    }
+}
+
+/*!
+    \qmlproperty int Notification::maxContentLines
+
+    A property suggesting the maximum amount of content to display for the notification.
+*/
+int Notification::maxContentLines() const
+{
+    Q_D(const Notification);
+    return d->hints.value(HINT_MAX_CONTENT_LINES).toInt();
+}
+
+void Notification::setMaxContentLines(int max)
+{
+    Q_D(Notification);
+    if (max != this->maxContentLines()) {
+        d->hints.insert(HINT_MAX_CONTENT_LINES, max);
+        emit maxContentLinesChanged();
     }
 }
 
