@@ -58,9 +58,11 @@ class Q_DECL_EXPORT Notification : public QObject
 {
     Q_OBJECT
     Q_ENUMS(Urgency)
+    Q_ENUMS(CloseReason)
 
 public:
     enum Urgency { Low = 0, Normal = 1, Critical = 2 };
+    enum CloseReason { Expired = 0, DismissedByUser = 1, Closed = 2 };
 
     explicit Notification(QObject *parent = 0);
     virtual ~Notification();
