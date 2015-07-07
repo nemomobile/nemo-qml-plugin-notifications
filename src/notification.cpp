@@ -257,24 +257,74 @@ class NotificationPrivate : public NotificationData
 };
 
 /*!
+    \qmlmodule org.nemomobile.notifications
+ */
+/*!
     \qmltype Notification
+    \inqmlmodule org.nemomobile.notifications
     \brief Allows notifications to be published
 
     The Notification class is a convenience class for using notifications
     based on the
-    \l {http://www.galago-project.org/specs/notification/0.9/} {Desktop
-    Notifications Specification} as implemented in Nemo.
+    \l {https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html}
+    {Desktop Notifications Specification} as implemented in Nemo.
 
-    Since the Nemo implementation allows static notification parameters,
-    such as icon, urgency, priority and user closability definitions, to
-    be defined as part of notification category definitions, this
-    convenience class is kept as simple as possible by allowing only the
-    dynamic parameters, such as summary and body text, item count and
-    timestamp to be defined. Other parameters should be defined in the
-    notification category definition. Please refer to Lipstick documentation
+    This class allows clients to create instances of notifications, which
+    can be used to communicate to the Lipstick Notification Manager via
+    D-Bus.  This simplifies the process of creating, listing and closing
+    notifications, since the necessary communications are handled by the
+    class.
+
+    Notification content can be specified by setting the various properties
+    on an instance of the Notification class, or can be handled by providing
+    a category definition file, whose properties are automatically applied
+    to matching notifications by the Lipstick Notification Manager. Properties
+    set in the notification instance will not be overwritten by values
+    listed in the category definition file. Please refer to Lipstick documentation
     for a complete description of the category definition files.
 
-    An example of the usage of this class from a Qml application:
+    A minimal example of using this class from a QML application:
+
+    \qml
+    Button {
+        Notification {
+            id: notification
+            category: "x-nemo.example"
+            summary: "Notification summary"
+            body: "Notification body"
+            onClicked: console.log("Clicked")
+        }
+        text: "Application notification" + (notification.replacesId ? " ID:" + notification.replacesId : "")
+        onClicked: notification.publish()
+    }
+    \endqml
+
+    When the button is clicked, a new notification is published to the
+    notification manager, having the properties specified in the Notification
+    object definition. Any properties specified by the definition file for
+    the nominated category will be automatically applied by the notification
+    manager during publication. The manager allocates an ID for the
+    notification, and the instance is updated so that this ID is reflected
+    in the \l replacesId property.
+
+    When the user invokes the 'default' action on the notification, the
+    \l clicked signal is emitted by the notification instance. If the
+    application is no longer running at the relevant time, then the signal
+    will be missed.
+
+    An example category definition file
+    /usr/share/lipstick/notificationcategories/x-nemo.example.conf:
+
+    \code
+    x-nemo-icon=icon-lock-sms
+    x-nemo-preview-icon=icon-s-status-sms
+    x-nemo-feedback=sms
+    x-nemo-priority=70
+    x-nemo-user-removable=true
+    x-nemo-user-closeable=false
+    \endcode
+
+    A more exhaustive example of usage from a QML application:
 
     \qml
     Button {
@@ -311,29 +361,20 @@ class NotificationPrivate : public NotificationData
             onClicked: console.log("Clicked")
             onClosed: console.log("Closed, reason: " + reason)
         }
-        text: "Application notification, ID " + notification.replacesId
+        text: "Application notification" + (notification.replacesId ? " ID:" + notification.replacesId : "")
         onClicked: notification.publish()
     }
     \endqml
 
-    An example category definition file
-    /usr/share/lipstick/notificationcategories/x-nemo.example.conf:
-
-    \code
-    x-nemo-icon=icon-lock-sms
-    x-nemo-preview-icon=icon-s-status-sms
-    x-nemo-feedback=sms
-    x-nemo-priority=70
-    x-nemo-user-removable=true
-    x-nemo-user-closeable=false
-    \endcode
-
-    After publishing the ID of the notification can be found from the
-    replacesId property.
-
-    Notification::notifications() can be used to fetch notifications
-    created by the calling application.
+    In this case, the notification includes a specification for
+    'remote actions', which are D-Bus commands that the notification
+    manager may permit the user to invoke. (Note: Lipstick currently
+    supports invoking only the remote action named "default"). When
+    an action is invoked on the notification, the corresponding D-Bus
+    command is formulated and invoked, which allows the application
+    to be launched to handled the notification action, if required.
  */
+
 Notification::Notification(QObject *parent) :
     QObject(parent),
     d_ptr(new NotificationPrivate)
@@ -358,7 +399,15 @@ Notification::~Notification()
 /*!
     \qmlproperty QString Notification::category
 
-    The type of notification this is. Defaults to an empty string.
+    The category whose properties should be applied to the notification by the Notification Manager.
+
+    Properties defined by the category definition file will be applied to the notification,
+    unless those properties are already set in the notification.
+ */
+/*!
+    \qmlproperty QString Notification::category
+
+    The category of notification this is. Defaults to an empty string.
  */
 QString Notification::category() const
 {
@@ -400,7 +449,12 @@ void Notification::setAppName(const QString &appName)
 /*!
     \qmlproperty uint Notification::replacesId
 
-    The optional notification ID that this notification replaces. The server must atomically (ie with no flicker or other visual cues) replace the given notification with this one. This allows clients to effectively modify the notification while it's active. A value of value of 0 means that this notification won't replace any existing notifications. Defaults to 0.
+    The ID that should be used to replace or remove this notification.
+
+    If a notification is published with a non-zero ID, it will replace any existing notification
+    with that ID, without alerting the user to any changes. An unpublished notification has a ID
+    of zero. The ID is automatically updated to contain the published ID after publication is
+    reported by the Notification Manager.
  */
 uint Notification::replacesId() const
 {
@@ -420,7 +474,8 @@ void Notification::setReplacesId(uint id)
 /*!
     \qmlproperty QString Notification::appIcon
 
-    The icon associated with this notification's application. Defaults to empty.
+    Returns the icon for the application that this notification is associated with. The value can
+    be a URI, an absolute filesystem path, or a token to be interpreted by the theme image provider.
  */
 QString Notification::appIcon() const
 {
@@ -440,7 +495,8 @@ void Notification::setAppIcon(const QString &appIcon)
 /*!
     \qmlproperty QString Notification::summary
 
-    The summary text briefly describing the notification. Defaults to an empty string.
+    The summary text briefly describing the notification.
+    The summary should give a brief, single-line description of the notification.
  */
 QString Notification::summary() const
 {
@@ -460,7 +516,7 @@ void Notification::setSummary(const QString &summary)
 /*!
     \qmlproperty QString Notification::body
 
-    The optional detailed body text. Can be empty. Defaults to an empty string.
+    Optional detailed body text.
  */
 QString Notification::body() const
 {
@@ -480,7 +536,18 @@ void Notification::setBody(const QString &body)
 /*!
     \qmlproperty enumeration Notification::urgency
 
-    The urgency level of the notification.
+    The urgency level of the notification. The value corresponds to one of:
+
+    \list
+    \li Notification.Low
+    \li Notification.Normal
+    \li Notification.Critical
+    \endlist
+
+    Urgency level is interpreted by the Notification Manager at publication. It may decide
+    to display or to suppress display of the notification depending on the current user
+    activity or device state, where notifications with \c Critical urgency are more likely
+    to be displayed.
 
     Defaults to Normal urgency.
  */
@@ -504,9 +571,10 @@ void Notification::setUrgency(Urgency urgency)
     \qmlproperty int32 Notification::expireTimeout
 
     The number of milliseconds after display at which the notification should be automatically closed.
-    ExpireTimeout of zero indicates that the notification should not close automatically.
+    A value of zero indicates that the notification should not close automatically, while -1
+    indicates that the notification manager should decide the expiration timeout.
 
-    Defaults to -1, indicating that the notification manager should decide the expiration timeout.
+    Defaults to -1.
  */
 qint32 Notification::expireTimeout() const
 {
@@ -526,7 +594,9 @@ void Notification::setExpireTimeout(qint32 milliseconds)
 /*!
     \qmlproperty QDateTime Notification::timestamp
 
-    The timestamp for the notification. Should be set to the time when the event the notification is related to has occurred. Defaults to current time.
+    The timestamp is typically associated with an event that the notification relates
+    to, rather than for the creation of the notification itself. If not specified, the
+    notification's timestamp will become the time of publification.
  */
 QDateTime Notification::timestamp() const
 {
@@ -546,7 +616,11 @@ void Notification::setTimestamp(const QDateTime &timestamp)
 /*!
     \qmlproperty QString Notification::previewSummary
 
-    Summary text to be shown in the preview banner for the notification, if any. Defaults to an empty string.
+    Summary text to be shown in the preview banner for the notification, if any.
+
+    If \c previewSummary or \l previewBody are specified, a preview of the notification
+    will be generated by Lipstick at publication (unless the Notification Manager chooses
+    to suppress the preview).
  */
 QString Notification::previewSummary() const
 {
@@ -566,7 +640,11 @@ void Notification::setPreviewSummary(const QString &previewSummary)
 /*!
     \qmlproperty QString Notification::previewBody
 
-    Body text to be shown in the preview banner for the notification, if any. Defaults to an empty string.
+    Body text to be shown in the preview banner for the notification, if any.
+
+    If \l previewSummary or \c previewBody are specified, a preview of the notification
+    will be generated by Lipstick at publication (unless the Notification Manager chooses
+    to suppress the preview).
  */
 QString Notification::previewBody() const
 {
@@ -586,7 +664,8 @@ void Notification::setPreviewBody(const QString &previewBody)
 /*!
     \qmlproperty int Notification::itemCount
 
-    The number of items represented by the notification. For example, a single notification can represent four missed calls by setting the count to 4. Defaults to 1.
+    The number of items represented by the notification.
+    For example, a single notification can represent four missed calls by setting the count to 4. Defaults to 1.
  */
 int Notification::itemCount() const
 {
@@ -606,9 +685,11 @@ void Notification::setItemCount(int itemCount)
 /*!
     \qmlmethod void Notification::publish()
 
-    Publishes the notification. If replacesId is 0, it will be a new
-    notification. Otherwise the existing notification with the given ID
-    is updated with the new details.
+    Publishes the current state of the notification to the Notification Manager.
+
+    If \l replacesId is zero, a new notification will be created and \l replacesId will be updated
+    to contain that ID. Otherwise the existing notification with the given ID is updated with the
+    new details.
 */
 void Notification::publish()
 {
@@ -639,7 +720,7 @@ void Notification::publish()
 /*!
     \qmlmethod void Notification::close()
 
-    Closes the notification if it has been published.
+    Closes the notification identified by \l replacesId.
 */
 void Notification::close()
 {
@@ -653,7 +734,7 @@ void Notification::close()
 /*!
     \qmlsignal Notification::clicked()
 
-    Sent when the notification is clicked (its default action is invoked).
+    Emitted when the notification is activated by the user.
 */
 void Notification::checkActionInvoked(uint id, QString actionKey)
 {
@@ -668,10 +749,14 @@ void Notification::checkActionInvoked(uint id, QString actionKey)
 /*!
     \qmlsignal Notification::closed(uint reason)
 
-    Sent when the notification has been closed.
-    \a reason is 1 if the notification expired, 2 if the notification was
-    dismissed by the user, 3 if the notification was closed by a call to
-    CloseNotification.
+    Emitted when the notification is reported closed by the notification manager.
+    The \a reason value may be any one of:
+
+    \list
+    \li Notification.Expired
+    \li Notification.DismissedByUser
+    \li Notification.Closed
+    \endlist
 */
 void Notification::checkNotificationClosed(uint id, uint reason)
 {
@@ -683,9 +768,8 @@ void Notification::checkNotificationClosed(uint id, uint reason)
 }
 
 /*!
-    \qmlproperty QString Notification::remoteDBusCallServiceName
-
-    The service name of the D-Bus call for this notification. Defaults to an empty string.
+    \property libnemonotifications::Notification::remoteDBusCallServiceName
+    \internal
  */
 QString Notification::remoteDBusCallServiceName() const
 {
@@ -708,9 +792,8 @@ void Notification::setRemoteDBusCallServiceName(const QString &serviceName)
 }
 
 /*!
-    \qmlproperty QString Notification::remoteDBusCallObjectPath
-
-    The object path of the D-Bus call for this notification. Defaults to an empty string.
+    \property libnemonotifications::Notification::remoteDBusCallObjectPath
+    \internal
  */
 QString Notification::remoteDBusCallObjectPath() const
 {
@@ -733,9 +816,8 @@ void Notification::setRemoteDBusCallObjectPath(const QString &objectPath)
 }
 
 /*!
-    \qmlproperty QString Notification::remoteDBusCallInterface
-
-    The interface of the D-Bus call for this notification. Defaults to an empty string.
+    \property libnemonotifications::Notification::remoteDBusCallInterface
+    \internal
  */
 QString Notification::remoteDBusCallInterface() const
 {
@@ -758,9 +840,8 @@ void Notification::setRemoteDBusCallInterface(const QString &interface)
 }
 
 /*!
-    \qmlproperty QString Notification::remoteDBusCallMethodName
-
-    The method name of the D-Bus call for this notification. Defaults to an empty string.
+    \property libnemonotifications::Notification::remoteDBusCallMethodName
+    \internal
  */
 QString Notification::remoteDBusCallMethodName() const
 {
@@ -783,9 +864,8 @@ void Notification::setRemoteDBusCallMethodName(const QString &methodName)
 }
 
 /*!
-    \qmlproperty QVariantList Notification::remoteDBusCallArguments
-
-    The arguments of the D-Bus call for this notification. Defaults to an empty variant list.
+    \property libnemonotifications::Notification::remoteDBusCallArguments
+    \internal
  */
 QVariantList Notification::remoteDBusCallArguments() const
 {
@@ -811,6 +891,32 @@ void Notification::setRemoteDBusCallArguments(const QVariantList &arguments)
     \qmlproperty QVariantList Notification::remoteActions
 
     The remote actions registered for potential invocation by this notification.
+
+    Remote actions are specified as a list of objects having the properties
+    'name', 'service', 'path', 'iface' and 'method', and optionally, the
+    properties 'displayName', 'icon' and 'arguments'.
+
+    For example:
+
+    \qml
+    Notification {
+        remoteActions: [ {
+            "name": "default",
+            "displayName": "Do something",
+            "icon": "icon-s-do-it",
+            "service": "org.nemomobile.example",
+            "path": "/example",
+            "iface": "org.nemomobile.example",
+            "method": "doSomething",
+            "arguments": [ "argument", 1 ]
+        } ]
+    }
+    \endqml
+
+    Note: the current implementation of Lipstick will invoke the action named "default" when
+    the user activates an individual notification.  If the user activates a notification
+    group, the action named "app" will be invoked, if that action is shared by all members of
+    the group.
  */
 QVariantList Notification::remoteActions() const
 {
@@ -856,7 +962,13 @@ void Notification::setRemoteActions(const QVariantList &remoteActions)
     \qmlproperty QString Notification::origin
 
     A property indicating the origin of the notification.
-    For example, the email address from which a mail was received that caused the notification to be created.
+
+    The origin hint can be used to associate an external property with a notification, separate
+    from the intermediary that reports the notificaiton. For example, a notification of a new
+    email is created and handled by an email client application, but notionally originates at
+    the sender's email address.
+
+    Stored as the 'x-nemo-origin' hint.
 */
 QString Notification::origin() const
 {
@@ -877,6 +989,10 @@ void Notification::setOrigin(const QString &origin)
     \qmlproperty int Notification::maxContentLines
 
     A property suggesting the maximum amount of content to display for the notification.
+    The content lines include the summary line, so a single-line notification does
+    not display any body text.
+
+    Stored as the 'x-nemo-max-content-lines' hint.
 */
 int Notification::maxContentLines() const
 {
@@ -916,12 +1032,10 @@ void Notification::setHintValue(const QString &hint, const QVariant &value)
 }
 
 /*!
-    \qmlmethod void Notification::notifications()
-
     Returns a list of notifications created by the calling application.
-    The returned objects are Notification components. They are only destroyed
-    when the application is closed, so the caller should take their ownership
-    and destroy them when they are not used anymore.
+
+    The returned objects are instances of the Notification class.
+    The caller takes ownership and should destroy them when they are no longer required.
 */
 QList<QObject*> Notification::notifications()
 {
@@ -930,12 +1044,10 @@ QList<QObject*> Notification::notifications()
 }
 
 /*!
-    \qmlmethod void Notification::notifications(const QString &owner)
+    Returns a list of notifications matching the supplied \a owner string.
 
-    Returns a list of notifications matching the supplied \a owner.
-    The returned objects are Notification components. They are only destroyed
-    when the application is closed, so the caller should take their ownership
-    and destroy them when they are not used anymore.
+    The returned objects are instances of the Notification class.
+    The caller takes ownership and should destroy them when they are no longer required.
 */
 QList<QObject*> Notification::notifications(const QString &owner)
 {
@@ -947,6 +1059,10 @@ QList<QObject*> Notification::notifications(const QString &owner)
     return objects;
 }
 
+/*!
+    Helper function to assemble an object specifying a remote action, to
+    be invoked via D-Bus.
+*/
 QVariant Notification::remoteAction(const QString &name, const QString &displayName,
                                     const QString &service, const QString &path, const QString &iface,
                                     const QString &method, const QVariantList &arguments)
