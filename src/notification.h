@@ -54,9 +54,37 @@ struct NotificationData
 
 class NotificationManagerProxy;
 class NotificationPrivate;
+
+#ifdef Q_QDOC
+// qdoc fails to link the documentation correctly because this project contains
+// a C++ class named Notification and a QML class named Notification.  Work around
+// this by making qdoc think the C++ class is in a namespace...
+namespace libnemonotifications {
+#endif
+
 class Q_DECL_EXPORT Notification : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QString category READ category WRITE setCategory NOTIFY categoryChanged)
+    Q_PROPERTY(QString appName READ appName WRITE setAppName NOTIFY appNameChanged)
+    Q_PROPERTY(quint32 replacesId READ replacesId WRITE setReplacesId NOTIFY replacesIdChanged)
+    Q_PROPERTY(QString appIcon READ appIcon WRITE setAppIcon NOTIFY appIconChanged)
+    Q_PROPERTY(QString summary READ summary WRITE setSummary NOTIFY summaryChanged)
+    Q_PROPERTY(QString body READ body WRITE setBody NOTIFY bodyChanged)
+    Q_PROPERTY(Urgency urgency READ urgency WRITE setUrgency NOTIFY urgencyChanged)
+    Q_PROPERTY(qint32 expireTimeout READ expireTimeout WRITE setExpireTimeout NOTIFY expireTimeoutChanged)
+    Q_PROPERTY(QDateTime timestamp READ timestamp WRITE setTimestamp NOTIFY timestampChanged)
+    Q_PROPERTY(QString previewSummary READ previewSummary WRITE setPreviewSummary NOTIFY previewSummaryChanged)
+    Q_PROPERTY(QString previewBody READ previewBody WRITE setPreviewBody NOTIFY previewBodyChanged)
+    Q_PROPERTY(int itemCount READ itemCount WRITE setItemCount NOTIFY itemCountChanged)
+    Q_PROPERTY(QString remoteDBusCallServiceName READ remoteDBusCallServiceName WRITE setRemoteDBusCallServiceName NOTIFY remoteDBusCallChanged)
+    Q_PROPERTY(QString remoteDBusCallObjectPath READ remoteDBusCallObjectPath WRITE setRemoteDBusCallObjectPath NOTIFY remoteDBusCallChanged)
+    Q_PROPERTY(QString remoteDBusCallInterface READ remoteDBusCallInterface WRITE setRemoteDBusCallInterface NOTIFY remoteDBusCallChanged)
+    Q_PROPERTY(QString remoteDBusCallMethodName READ remoteDBusCallMethodName WRITE setRemoteDBusCallMethodName NOTIFY remoteDBusCallChanged)
+    Q_PROPERTY(QVariantList remoteDBusCallArguments READ remoteDBusCallArguments WRITE setRemoteDBusCallArguments NOTIFY remoteDBusCallChanged)
+    Q_PROPERTY(QVariantList remoteActions READ remoteActions WRITE setRemoteActions NOTIFY remoteActionsChanged)
+    Q_PROPERTY(QString origin READ origin WRITE setOrigin NOTIFY originChanged)
+    Q_PROPERTY(int maxContentLines READ maxContentLines WRITE setMaxContentLines NOTIFY maxContentLinesChanged)
     Q_ENUMS(Urgency)
     Q_ENUMS(CloseReason)
 
@@ -67,85 +95,66 @@ public:
     explicit Notification(QObject *parent = 0);
     virtual ~Notification();
 
-    Q_PROPERTY(QString category READ category WRITE setCategory NOTIFY categoryChanged)
     QString category() const;
     void setCategory(const QString &category);
 
-    Q_PROPERTY(QString appName READ appName WRITE setAppName NOTIFY appNameChanged)
     QString appName() const;
     void setAppName(const QString &appName);
 
-    Q_PROPERTY(quint32 replacesId READ replacesId WRITE setReplacesId NOTIFY replacesIdChanged)
     quint32 replacesId() const;
     void setReplacesId(quint32 id);
 
-    Q_PROPERTY(QString appIcon READ appIcon WRITE setAppIcon NOTIFY appIconChanged)
     QString appIcon() const;
     void setAppIcon(const QString &appIcon);
 
-    Q_PROPERTY(QString summary READ summary WRITE setSummary NOTIFY summaryChanged)
     QString summary() const;
     void setSummary(const QString &summary);
 
-    Q_PROPERTY(QString body READ body WRITE setBody NOTIFY bodyChanged)
     QString body() const;
     void setBody(const QString &body);
 
-    Q_PROPERTY(Urgency urgency READ urgency WRITE setUrgency NOTIFY urgencyChanged)
     Urgency urgency() const;
     void setUrgency(Urgency urgency);
 
-    Q_PROPERTY(qint32 expireTimeout READ expireTimeout WRITE setExpireTimeout NOTIFY expireTimeoutChanged)
     qint32 expireTimeout() const;
     void setExpireTimeout(qint32 milliseconds);
 
-    Q_PROPERTY(QDateTime timestamp READ timestamp WRITE setTimestamp NOTIFY timestampChanged)
     QDateTime timestamp() const;
     void setTimestamp(const QDateTime &timestamp);
 
-    Q_PROPERTY(QString previewSummary READ previewSummary WRITE setPreviewSummary NOTIFY previewSummaryChanged)
     QString previewSummary() const;
     void setPreviewSummary(const QString &previewSummary);
 
-    Q_PROPERTY(QString previewBody READ previewBody WRITE setPreviewBody NOTIFY previewBodyChanged)
     QString previewBody() const;
     void setPreviewBody(const QString &previewBody);
 
-    Q_PROPERTY(int itemCount READ itemCount WRITE setItemCount NOTIFY itemCountChanged)
     int itemCount() const;
     void setItemCount(int itemCount);
 
-    Q_PROPERTY(QString remoteDBusCallServiceName READ remoteDBusCallServiceName WRITE setRemoteDBusCallServiceName NOTIFY remoteDBusCallChanged)
+    // Deprecated 'remoteDBusCall...' functions:
     QString remoteDBusCallServiceName() const;
     void setRemoteDBusCallServiceName(const QString &serviceName);
 
-    Q_PROPERTY(QString remoteDBusCallObjectPath READ remoteDBusCallObjectPath WRITE setRemoteDBusCallObjectPath NOTIFY remoteDBusCallChanged)
     QString remoteDBusCallObjectPath() const;
     void setRemoteDBusCallObjectPath(const QString &objectPath);
 
-    Q_PROPERTY(QString remoteDBusCallInterface READ remoteDBusCallInterface WRITE setRemoteDBusCallInterface NOTIFY remoteDBusCallChanged)
     QString remoteDBusCallInterface() const;
     void setRemoteDBusCallInterface(const QString &interface);
 
-    Q_PROPERTY(QString remoteDBusCallMethodName READ remoteDBusCallMethodName WRITE setRemoteDBusCallMethodName NOTIFY remoteDBusCallChanged)
     QString remoteDBusCallMethodName() const;
     void setRemoteDBusCallMethodName(const QString &methodName);
 
-    Q_PROPERTY(QVariantList remoteDBusCallArguments READ remoteDBusCallArguments WRITE setRemoteDBusCallArguments NOTIFY remoteDBusCallChanged)
     QVariantList remoteDBusCallArguments() const;
     void setRemoteDBusCallArguments(const QVariantList &arguments);
 
     // Obsoletes the set of remoteDBusCall... properties
-    Q_PROPERTY(QVariantList remoteActions READ remoteActions WRITE setRemoteActions NOTIFY remoteActionsChanged)
     QVariantList remoteActions() const;
     void setRemoteActions(const QVariantList &remoteActions);
     inline void setRemoteAction(const QVariant &remoteAction) { setRemoteActions(QVariantList() << remoteAction); }
 
-    Q_PROPERTY(QString origin READ origin WRITE setOrigin NOTIFY originChanged)
     QString origin() const;
     void setOrigin(const QString &origin);
 
-    Q_PROPERTY(int maxContentLines READ maxContentLines WRITE setMaxContentLines NOTIFY maxContentLinesChanged)
     int maxContentLines() const;
     void setMaxContentLines(int max);
 
@@ -194,6 +203,10 @@ private:
 
     static Notification *createNotification(const NotificationData &data, QObject *parent = 0);
 };
+
+#ifdef Q_QDOC
+} // namespace libnemonotifications
+#endif
 
 QDBusArgument &operator<<(QDBusArgument &, const NotificationData &);
 const QDBusArgument &operator>>(const QDBusArgument &, NotificationData &);
