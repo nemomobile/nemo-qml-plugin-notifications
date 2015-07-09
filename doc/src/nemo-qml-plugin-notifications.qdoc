@@ -6,7 +6,15 @@
 
     This plugin provides C++/QML classes for publishing notifications in the Nemo environment.
 
+    \section2 QML types:
+
     \list
     \li \l{Notification}
+    \endlist
+
+    \section2 C++ classes:
+
+    \list
+    \li \l{libnemonotifications::Notification}
     \endlist
 */
