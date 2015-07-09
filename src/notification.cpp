@@ -257,34 +257,31 @@ class NotificationPrivate : public NotificationData
 };
 
 /*!
-    \qmlmodule org.nemomobile.notifications
- */
-/*!
     \qmltype Notification
     \inqmlmodule org.nemomobile.notifications
     \instantiates libnemonotifications::Notification
     \brief Allows notifications to be published
 
-    The Notification class is a convenience class for using notifications
+    The Notification type is a convenience type for using notifications
     based on the
     \l {https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html}
     {Desktop Notifications Specification} as implemented in Nemo.
 
-    This class allows clients to create instances of notifications, which
+    This type allows clients to create instances of notifications, which
     can be used to communicate to the Lipstick Notification Manager via
     D-Bus.  This simplifies the process of creating, listing and closing
     notifications, since the necessary communications are handled by the
-    class.
+    type.
 
     Notification content can be specified by setting the various properties
-    on an instance of the Notification class, or can be handled by providing
+    on an instance of the Notification type, or can be handled by providing
     a category definition file, whose properties are automatically applied
     to matching notifications by the Lipstick Notification Manager. Properties
     set in the notification instance will not be overwritten by values
     listed in the category definition file. Please refer to Lipstick documentation
     for a complete description of the category definition files.
 
-    A minimal example of using this class from a QML application:
+    A minimal example of using this type from a QML application:
 
     \qml
     Button {
@@ -369,7 +366,7 @@ class NotificationPrivate : public NotificationData
 
     In this case, the notification includes a specification for
     'remote actions', which are D-Bus commands that the notification
-    manager may permit the user to invoke. (Note: Lipstick currently
+    manager may permit the user to invoke. (Note that Lipstick currently
     supports invoking only the remote action named "default"). When
     an action is invoked on the notification, the corresponding D-Bus
     command is formulated and invoked, which allows the application
@@ -466,7 +463,7 @@ Notification::~Notification()
 }
 
 /*!
-    \qmlproperty QString Notification::category
+    \qmlproperty string Notification::category
 
     The category whose properties should be applied to the notification by the Notification Manager.
 
@@ -497,7 +494,7 @@ void Notification::setCategory(const QString &category)
 }
 
 /*!
-    \qmlproperty QString Notification::appName
+    \qmlproperty string Notification::appName
 
     The application name associated with this notification, for display purposes.
 
@@ -526,7 +523,7 @@ void Notification::setAppName(const QString &appName)
 }
 
 /*!
-    \qmlproperty uint Notification::replacesId
+    \qmlproperty int Notification::replacesId
 
     The ID that should be used to replace or remove this notification.
 
@@ -561,9 +558,9 @@ void Notification::setReplacesId(uint id)
 }
 
 /*!
-    \qmlproperty QString Notification::appIcon
+    \qmlproperty string Notification::appIcon
 
-    Returns the icon for the application that this notification is associated with. The value can
+    The icon for the application that this notification is associated with. The value can
     be a URI, an absolute filesystem path, or a token to be interpreted by the theme image provider.
  */
 /*!
@@ -588,7 +585,7 @@ void Notification::setAppIcon(const QString &appIcon)
 }
 
 /*!
-    \qmlproperty QString Notification::summary
+    \qmlproperty string Notification::summary
 
     The summary text briefly describing the notification.
     The summary should give a brief, single-line description of the notification.
@@ -615,7 +612,7 @@ void Notification::setSummary(const QString &summary)
 }
 
 /*!
-    \qmlproperty QString Notification::body
+    \qmlproperty string Notification::body
 
     Optional detailed body text.
  */
@@ -686,7 +683,7 @@ void Notification::setUrgency(Urgency urgency)
 }
 
 /*!
-    \qmlproperty int32 Notification::expireTimeout
+    \qmlproperty int Notification::expireTimeout
 
     The number of milliseconds after display at which the notification should be automatically closed.
     A value of zero indicates that the notification should not close automatically, while -1
@@ -719,7 +716,7 @@ void Notification::setExpireTimeout(qint32 milliseconds)
 }
 
 /*!
-    \qmlproperty QDateTime Notification::timestamp
+    \qmlproperty date Notification::timestamp
 
     The timestamp is typically associated with an event that the notification relates
     to, rather than for the creation of the notification itself. If not specified, the
@@ -748,7 +745,7 @@ void Notification::setTimestamp(const QDateTime &timestamp)
 }
 
 /*!
-    \qmlproperty QString Notification::previewSummary
+    \qmlproperty string Notification::previewSummary
 
     Summary text to be shown in the preview banner for the notification, if any.
 
@@ -781,7 +778,7 @@ void Notification::setPreviewSummary(const QString &previewSummary)
 }
 
 /*!
-    \qmlproperty QString Notification::previewBody
+    \qmlproperty string Notification::previewBody
 
     Body text to be shown in the preview banner for the notification, if any.
 
@@ -907,6 +904,14 @@ void Notification::close()
     \qmlsignal Notification::clicked()
 
     Emitted when the notification is activated by the user.
+
+    Handling the \c clicked signal is only effective if the process is running when the
+    user activates the notification, which may occur long after the notification is
+    published. A more robust solution is to register a 'remote action' with the
+    Notification Manager, so that a handler can be started running and invoked
+    to service the request.
+
+    \sa Notification::remoteActions
 */
 /*!
     \fn void libnemonotifications::Notification::clicked()
@@ -1124,7 +1129,7 @@ void Notification::setRemoteDBusCallArguments(const QVariantList &arguments)
  */
 
 /*!
-    \qmlproperty QVariantList Notification::remoteActions
+    \qmlproperty list<variant> Notification::remoteActions
 
     The remote actions registered for potential invocation by this notification.
 
@@ -1149,7 +1154,7 @@ void Notification::setRemoteDBusCallArguments(const QVariantList &arguments)
     }
     \endqml
 
-    Note: the current implementation of Lipstick will invoke the action named "default" when
+    \note the current implementation of Lipstick will invoke the action named "default" when
     the user activates an individual notification.  If the user activates a notification
     group, the action named "app" will be invoked, if that action is shared by all members of
     the group.
@@ -1216,7 +1221,7 @@ void Notification::setRemoteActions(const QVariantList &remoteActions)
  */
 
 /*!
-    \qmlproperty QString Notification::origin
+    \qmlproperty string Notification::origin
 
     A property indicating the origin of the notification.
 
