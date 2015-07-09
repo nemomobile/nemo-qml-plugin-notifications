@@ -469,6 +469,8 @@ Notification::~Notification()
 
     Properties defined by the category definition file will be applied to the notification,
     unless those properties are already set in the notification.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#hints}{hint value} "category".
  */
 /*!
     \property libnemonotifications::Notification::category
@@ -477,6 +479,8 @@ Notification::~Notification()
 
     Properties defined by the category definition file will be applied to the notification,
     unless those properties are already set in the notification.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#hints}{hint value} "category".
  */
 QString Notification::category() const
 {
@@ -499,6 +503,8 @@ void Notification::setCategory(const QString &category)
     The application name associated with this notification, for display purposes.
 
     The application name should be the formal name, localized if appropriate.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#commands}{Notify} parameter "app_name".
  */
 /*!
     \property libnemonotifications::Notification::appName
@@ -506,6 +512,8 @@ void Notification::setCategory(const QString &category)
     The application name associated with this notification, for display purposes.
 
     The application name should be the formal name, localized if appropriate.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#commands}{Notify} parameter "app_name".
  */
 QString Notification::appName() const
 {
@@ -531,6 +539,8 @@ void Notification::setAppName(const QString &appName)
     with that ID, without alerting the user to any changes. An unpublished notification has a ID
     of zero. The ID is automatically updated to contain the published ID after publication is
     reported by the Notification Manager.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#commands}{Notify} parameter "replaces_id".
  */
 /*!
     \property libnemonotifications::Notification::replacesId
@@ -541,6 +551,8 @@ void Notification::setAppName(const QString &appName)
     with that ID, without alerting the user to any changes. An unpublished notification has a ID
     of zero. The ID is automatically updated to contain the published ID after publication is
     reported by the Notification Manager.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#commands}{Notify} parameter "replaces_id".
  */
 uint Notification::replacesId() const
 {
@@ -562,12 +574,16 @@ void Notification::setReplacesId(uint id)
 
     The icon for the application that this notification is associated with. The value can
     be a URI, an absolute filesystem path, or a token to be interpreted by the theme image provider.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#commands}{Notify} parameter "app_icon".
  */
 /*!
     \property libnemonotifications::Notification::appIcon
 
     The icon for the application that this notification is associated with. The value can
     be a URI, an absolute filesystem path, or a token to be interpreted by the theme image provider.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#commands}{Notify} parameter "app_icon".
  */
 QString Notification::appIcon() const
 {
@@ -589,12 +605,16 @@ void Notification::setAppIcon(const QString &appIcon)
 
     The summary text briefly describing the notification.
     The summary should give a brief, single-line description of the notification.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#commands}{Notify} parameter "summary".
  */
 /*!
     \property libnemonotifications::Notification::summary
 
     The summary text briefly describing the notification.
     The summary should give a brief, single-line description of the notification.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#commands}{Notify} parameter "summary".
  */
 QString Notification::summary() const
 {
@@ -615,11 +635,15 @@ void Notification::setSummary(const QString &summary)
     \qmlproperty string Notification::body
 
     Optional detailed body text.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#commands}{Notify} parameter "body".
  */
 /*!
     \property libnemonotifications::Notification::body
 
     Optional detailed body text.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#commands}{Notify} parameter "body".
  */
 QString Notification::body() const
 {
@@ -653,6 +677,8 @@ void Notification::setBody(const QString &body)
     to be displayed.
 
     Defaults to Normal urgency.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#hints}{hint value} "urgency".
  */
 /*!
     \property libnemonotifications::Notification::urgency
@@ -665,6 +691,8 @@ void Notification::setBody(const QString &body)
     to be displayed.
 
     Defaults to Normal urgency.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#hints}{hint value} "urgency".
  */
 Notification::Urgency Notification::urgency() const
 {
@@ -690,6 +718,8 @@ void Notification::setUrgency(Urgency urgency)
     indicates that the notification manager should decide the expiration timeout.
 
     Defaults to -1.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#commands}{Notify} parameter "expire_timeout".
  */
 /*!
     \property libnemonotifications::Notification::expireTimeout
@@ -699,6 +729,8 @@ void Notification::setUrgency(Urgency urgency)
     indicates that the notification manager should decide the expiration timeout.
 
     Defaults to -1.
+
+    This property is transmitted as the standard \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#commands}{Notify} parameter "expire_timeout".
  */
 qint32 Notification::expireTimeout() const
 {
@@ -721,6 +753,8 @@ void Notification::setExpireTimeout(qint32 milliseconds)
     The timestamp is typically associated with an event that the notification relates
     to, rather than for the creation of the notification itself. If not specified, the
     notification's timestamp will become the time of publification.
+
+    This property is transmitted as the extension hint value "x-nemo-timestamp".
  */
 /*!
     \property libnemonotifications::Notification::timestamp
@@ -728,6 +762,8 @@ void Notification::setExpireTimeout(qint32 milliseconds)
     The timestamp is typically associated with an event that the notification relates
     to, rather than for the creation of the notification itself. If not specified, the
     notification's timestamp will become the time of publification.
+
+    This property is transmitted as the extension hint value "x-nemo-timestamp".
  */
 QDateTime Notification::timestamp() const
 {
@@ -752,6 +788,8 @@ void Notification::setTimestamp(const QDateTime &timestamp)
     If \c previewSummary or \l previewBody are specified, a preview of the notification
     will be generated by Lipstick at publication (unless the Notification Manager chooses
     to suppress the preview).
+
+    This property is transmitted as the extension hint value "x-nemo-preview-summary".
  */
 /*!
     \property libnemonotifications::Notification::previewSummary
@@ -761,6 +799,8 @@ void Notification::setTimestamp(const QDateTime &timestamp)
     If \c previewSummary or \l previewBody are specified, a preview of the notification
     will be generated by Lipstick at publication (unless the Notification Manager chooses
     to suppress the preview).
+
+    This property is transmitted as the extension hint value "x-nemo-preview-summary".
  */
 QString Notification::previewSummary() const
 {
@@ -785,6 +825,8 @@ void Notification::setPreviewSummary(const QString &previewSummary)
     If \l previewSummary or \c previewBody are specified, a preview of the notification
     will be generated by Lipstick at publication (unless the Notification Manager chooses
     to suppress the preview).
+
+    This property is transmitted as the extension hint value "x-nemo-preview-body".
  */
 /*!
     \property libnemonotifications::Notification::previewBody
@@ -794,6 +836,8 @@ void Notification::setPreviewSummary(const QString &previewSummary)
     If \l previewSummary or \c previewBody are specified, a preview of the notification
     will be generated by Lipstick at publication (unless the Notification Manager chooses
     to suppress the preview).
+
+    This property is transmitted as the extension hint value "x-nemo-preview-body".
  */
 QString Notification::previewBody() const
 {
@@ -815,12 +859,16 @@ void Notification::setPreviewBody(const QString &previewBody)
 
     The number of items represented by the notification.
     For example, a single notification can represent four missed calls by setting the count to 4. Defaults to 1.
+
+    This property is transmitted as the extension hint value "x-nemo-item-count".
  */
 /*!
     \property libnemonotifications::Notification::itemCount
 
     The number of items represented by the notification.
     For example, a single notification can represent four missed calls by setting the count to 4. Defaults to 1.
+
+    This property is transmitted as the extension hint value "x-nemo-item-count".
  */
 int Notification::itemCount() const
 {
@@ -1158,6 +1206,8 @@ void Notification::setRemoteDBusCallArguments(const QVariantList &arguments)
     the user activates an individual notification.  If the user activates a notification
     group, the action named "app" will be invoked, if that action is shared by all members of
     the group.
+
+    This property is transmitted as the \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#commands}{Notify} parameter "actions" and the extension hint value "x-nemo-remote-action-<name>".
  */
 /*!
     \property libnemonotifications::Notification::remoteActions
@@ -1172,6 +1222,8 @@ void Notification::setRemoteDBusCallArguments(const QVariantList &arguments)
     the user activates an individual notification.  If the user activates a notification
     group, the action named "app" will be invoked, if that action is shared by all members of
     the group.
+
+    This property is transmitted as the \l{https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#commands}{Notify} parameter "actions" and the extension hint value "x-nemo-remote-action-<name>".
 
     \sa libnemonotifications::Notification::remoteAction()
  */
@@ -1230,7 +1282,7 @@ void Notification::setRemoteActions(const QVariantList &remoteActions)
     email is created and handled by an email client application, but notionally originates at
     the sender's email address.
 
-    Stored as the 'x-nemo-origin' hint.
+    This property is transmitted as the extension hint value "x-nemo-origin".
 */
 /*!
     \property libnemonotifications::Notification::origin
@@ -1242,7 +1294,7 @@ void Notification::setRemoteActions(const QVariantList &remoteActions)
     email is created and handled by an email client application, but notionally originates at
     the sender's email address.
 
-    Stored as the 'x-nemo-origin' hint.
+    This property is transmitted as the extension hint value "x-nemo-origin".
 */
 QString Notification::origin() const
 {
@@ -1266,7 +1318,7 @@ void Notification::setOrigin(const QString &origin)
     The content lines include the summary line, so a single-line notification does
     not display any body text.
 
-    Stored as the 'x-nemo-max-content-lines' hint.
+    This property is transmitted as the extension hint value "x-nemo-max-content-lines".
 */
 /*!
     \property libnemonotifications::Notification::maxContentLines
@@ -1275,7 +1327,7 @@ void Notification::setOrigin(const QString &origin)
     The content lines include the summary line, so a single-line notification does
     not display any body text.
 
-    Stored as the 'x-nemo-max-content-lines' hint.
+    This property is transmitted as the extension hint value "x-nemo-max-content-lines".
 */
 int Notification::maxContentLines() const
 {
