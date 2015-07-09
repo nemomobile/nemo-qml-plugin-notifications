@@ -14,7 +14,7 @@ naturallanguage = en_US
 project = Nemo Mobile notification C++/QML classes
 description = C++/QML classes to allow applications to easily use notifications in their C++/QML applications
 versionsym      =
-version         = 1.0.8
+version         = 1.0.7.1
 url             = 
 
 sources.fileextensions = "*.cpp *.qdoc *.mm *.qml"
@@ -40,6 +40,6 @@ qhp.notifications.virtualFolder      = nemo-qml-plugin-notifications.qhp
 qhp.notifications.indexTitle         = Nemo Mobile notification Reference Documentation
 qhp.notifications.indexRoot          =
 
-qhp.notifications.filterAttributes   = org.nemomobile.notifications 1.0.8
-qhp.notifications.customFilters.TransferEngine.name = Nemo Mobile notification C++/QML classes 1.0.8
-qhp.notifications.customFilters.TransferEngine.filterAttributes = org.nemomobile.notifications 1.0.8
+qhp.notifications.filterAttributes   = org.nemomobile.notifications 1.0.7.1
+qhp.notifications.customFilters.TransferEngine.name = Nemo Mobile notification C++/QML classes 1.0.7.1
+qhp.notifications.customFilters.TransferEngine.filterAttributes = org.nemomobile.notifications 1.0.7.1
