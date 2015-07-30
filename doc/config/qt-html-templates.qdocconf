@@ -31,3 +31,13 @@ HTML.footer = \
     "    Free Documentation License version 1.3</a>\n" \
     "    as published by the Free Software Foundation.</p>\n" \
     "</div>\n" \
+
+# Files not referenced in any qdoc file.
+# See also HTML.extraimages
+qhp.notifications.extraFiles = index.html \
+                            images/breadcrumb.png \
+                            images/bullet_gt.png \
+                            images/bullet_dn.png \
+                            images/bullet_sq.png \
+                            images/bullet_up.png \
+                            style/offline.css
