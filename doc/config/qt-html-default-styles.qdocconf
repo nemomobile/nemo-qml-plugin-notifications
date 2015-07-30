@@ -9,11 +9,11 @@ HTML.stylesheets = style/offline.css
 HTML.scripts     =
 
 # Files not referenced in any qdoc file
-extraimages.HTML        = breadcrumb.png \
-                          bullet_gt.png \
-                          bullet_dn.png \
-                          bullet_sq.png \
-                          bullet_up.png
+HTML.extraimages        = images/breadcrumb.png \
+                          images/bullet_gt.png \
+                          images/bullet_dn.png \
+                          images/bullet_sq.png \
+                          images/bullet_up.png
     
 # Include the style sheets and scripts used.
 
