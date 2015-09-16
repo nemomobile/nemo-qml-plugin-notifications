@@ -81,6 +81,7 @@ cp -R doc/html/* %{buildroot}/%{_docdir}/%{name}/
 %{_libdir}/libnemonotifications-qt5.so.*
 %{_libdir}/qt5/qml/org/nemomobile/notifications/libnemonotifications.so
 %{_libdir}/qt5/qml/org/nemomobile/notifications/qmldir
+%{_libdir}/qt5/qml/org/nemomobile/notifications/plugins.qmltypes
 # >> files
 # << files
 
